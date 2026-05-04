@@ -1,0 +1,461 @@
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import api from '../api';
+import type { Enrollment, User } from '../types';
+import { calcMedia, calcStatus, fmtGrade, fmtFreq } from '../types';
+import DeclaracaoMatricula from '../components/DeclaracaoMatricula';
+
+type Tab = 'inicio' | 'boletim' | 'frequencia' | 'perfil' | 'declaracao';
+
+export default function StudentDashboard() {
+  const { user, logout } = useAuth();
+  const [tab, setTab] = useState<Tab>('inicio');
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [profile, setProfile] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([api.get('/student/enrollments'), api.get('/student/profile')]).then(
+      ([eRes, pRes]) => { setEnrollments(eRes.data); setProfile(pRes.data); setLoading(false); }
+    );
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-400">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const tabs = [
+    { key: 'inicio',     label: 'Início' },
+    { key: 'boletim',    label: 'Boletim' },
+    { key: 'frequencia', label: 'Frequência' },
+    { key: 'perfil',     label: 'Perfil' },
+    { key: 'declaracao', label: '📄 Declaração' },
+  ] as { key: Tab; label: string }[];
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <header className="bg-blue-800 text-white shadow-md">
+        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-14 sm:h-16">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <span className="font-bold text-base sm:text-lg tracking-tight">FAMED</span>
+              <span className="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded-full hidden sm:inline">Portal do Aluno</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <span className="text-sm text-blue-200 hidden md:block truncate max-w-[160px]">{user?.name}</span>
+            <button onClick={logout} className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">Sair</button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-4 py-4 sm:py-6">
+        <div className="tab-bar">
+          {tabs.map((t) => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`tab-btn ${tab === t.key ? 'tab-btn-active' : 'tab-btn-inactive'}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'inicio'     && <InicioTab enrollments={enrollments} profile={profile} />}
+        {tab === 'boletim'    && <BoletimTab enrollments={enrollments} />}
+        {tab === 'frequencia' && <FrequenciaTab enrollments={enrollments} />}
+        {tab === 'perfil'     && <PerfilTab profile={profile} />}
+        {tab === 'declaracao' && <div className="card"><DeclaracaoMatricula profile={profile} /></div>}
+      </main>
+    </div>
+  );
+}
+
+// ── INÍCIO ────────────────────────────────────────────────────────────────────
+
+function InicioTab({ enrollments, profile }: { enrollments: Enrollment[]; profile: User | null }) {
+  const p = profile as User & { matricula?: string; semester?: number };
+  const withGrades = enrollments.filter((e) => e.n1 !== null && e.n2 !== null && e.n3 !== null);
+  const medias = withGrades.map((e) => calcMedia(e.n1, e.n2, e.n3)).filter((m): m is number => m !== null);
+  const mediaGeral = medias.length ? medias.reduce((a, b) => a + b, 0) / medias.length : null;
+  const aprovados = withGrades.filter((e) => { const m = calcMedia(e.n1, e.n2, e.n3); return m !== null && m >= 5; }).length;
+  const reprovados = withGrades.filter((e) => calcStatus(e).label.startsWith('Rep')).length;
+  const emRisco = enrollments.filter((e) => {
+    const max = Math.floor(e.workload * 0.25);
+    return e.total_classes > 0 && e.absences > max * 0.7 && e.absences <= max;
+  }).length;
+
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* Banner */}
+      <div className="bg-gradient-to-r from-blue-700 to-blue-500 rounded-2xl p-4 sm:p-6 text-white">
+        <p className="text-blue-100 text-sm mb-1">Bem-vindo(a) de volta,</p>
+        <h2 className="text-xl sm:text-2xl font-bold">{profile?.name}</h2>
+        <div className="flex flex-wrap gap-2 mt-3 text-xs sm:text-sm">
+          <span className="bg-white/20 px-3 py-1 rounded-full">Matrícula: <strong>{p?.matricula ?? '—'}</strong></span>
+          <span className="bg-white/20 px-3 py-1 rounded-full">{p?.semester ?? '—'}º Semestre</span>
+          <span className="bg-white/20 px-3 py-1 rounded-full">Medicina</span>
+        </div>
+      </div>
+
+      {/* Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StatCard label="Disciplinas"  value={String(enrollments.length)}        sub="matriculadas"        color="blue"  icon="📚" />
+        <StatCard label="Média Geral"  value={mediaGeral !== null ? mediaGeral.toFixed(1) : '—'} sub={mediaGeral === null ? 'sem notas' : mediaGeral >= 5 ? 'regular' : 'atenção'} color={mediaGeral === null ? 'gray' : mediaGeral >= 5 ? 'green' : 'red'} icon="📊" />
+        <StatCard label="Aprovado em"  value={String(aprovados)}                 sub={`de ${withGrades.length}`} color="green" icon="✅" />
+        <StatCard label="Reprovações"  value={String(reprovados)}                sub="até o momento"       color={reprovados > 0 ? 'red' : 'green'} icon="⚠️" />
+      </div>
+
+      {/* Situação por disciplina */}
+      <div className="card">
+        <h3 className="text-sm sm:text-base font-semibold text-slate-800 mb-3">Situação por Disciplina</h3>
+        {enrollments.length === 0 ? (
+          <p className="text-slate-400 text-sm text-center py-4">Nenhuma disciplina matriculada.</p>
+        ) : (
+          <div className="space-y-2">
+            {enrollments.map((e) => {
+              const s = calcStatus(e);
+              const media = calcMedia(e.n1, e.n2, e.n3);
+              const allN = [e.n1, e.n2, e.n3].filter((v) => v !== null).length === 3;
+              const maxAbs = Math.floor(e.workload * 0.25);
+              const freqPct = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
+              const freqWarn = freqPct !== null && freqPct < 80;
+              return (
+                <div key={e.enrollment_id} className="flex items-center gap-2 p-2.5 sm:p-3 rounded-lg hover:bg-slate-50 border border-slate-100">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-800 truncate">{e.name}</p>
+                    <div className="flex flex-wrap gap-x-3 mt-0.5 text-xs text-slate-500">
+                      <span>Média: <strong className={allN && media !== null ? (media >= 5 ? 'text-green-700' : 'text-red-600') : 'text-slate-400'}>{allN && media !== null ? media.toFixed(1) : '—'}</strong></span>
+                      <span className={freqWarn ? 'text-orange-600 font-semibold' : ''}>Freq: {freqPct !== null ? freqPct.toFixed(0) + '%' : '—'}{freqWarn && ' ⚠️'}</span>
+                      <span className="hidden sm:inline">Faltas: {e.absences}/{maxAbs}</span>
+                    </div>
+                  </div>
+                  <span className={s.cls}>{s.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {emRisco > 0 && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex gap-3">
+          <span className="text-orange-500 text-lg mt-0.5 flex-shrink-0">⚠️</span>
+          <div>
+            <p className="text-sm font-semibold text-orange-800">Atenção à frequência</p>
+            <p className="text-xs sm:text-sm text-orange-700">
+              Você tem {emRisco} disciplina(s) com frequência se aproximando do limite. Fique atento para não ser reprovado por falta.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ label, value, sub, color, icon }: { label: string; value: string; sub: string; color: string; icon: string }) {
+  const colors: Record<string, string> = {
+    blue:  'from-blue-50  to-blue-100  border-blue-200  text-blue-800',
+    green: 'from-green-50 to-green-100 border-green-200 text-green-800',
+    red:   'from-red-50   to-red-100   border-red-200   text-red-800',
+    gray:  'from-slate-50 to-slate-100 border-slate-200 text-slate-600',
+  };
+  return (
+    <div className={`bg-gradient-to-br ${colors[color]} border rounded-xl p-3 sm:p-4`}>
+      <div className="text-lg sm:text-xl mb-1">{icon}</div>
+      <div className="text-xl sm:text-2xl font-bold">{value}</div>
+      <div className="text-xs font-medium mt-0.5">{label}</div>
+      <div className="text-xs opacity-70 mt-0.5 hidden sm:block">{sub}</div>
+    </div>
+  );
+}
+
+// ── BOLETIM ───────────────────────────────────────────────────────────────────
+
+function BoletimTab({ enrollments }: { enrollments: Enrollment[] }) {
+  return (
+    <div className="card">
+      <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-4">Boletim Acadêmico</h2>
+      {enrollments.length === 0 ? (
+        <p className="text-slate-400 text-sm text-center py-8">Nenhuma disciplina matriculada.</p>
+      ) : (
+        <>
+          {/* Mobile cards */}
+          <div className="block sm:hidden space-y-3">
+            {enrollments.map((e) => {
+              const media = calcMedia(e.n1, e.n2, e.n3);
+              const allN = [e.n1, e.n2, e.n3].filter((v) => v !== null).length === 3;
+              const status = calcStatus(e);
+              return (
+                <div key={e.enrollment_id} className="border border-slate-200 rounded-xl p-4 bg-white">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="font-semibold text-slate-800 text-sm">{e.name}</p>
+                      <p className="text-xs text-slate-400 font-mono">{e.code}</p>
+                    </div>
+                    <span className={status.cls}>{status.label}</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {([['N1', e.n1], ['N2', e.n2], ['N3', e.n3]] as [string, number | null][]).map(([l, v]) => (
+                      <div key={l} className="grade-cell">
+                        <div className="grade-cell-label">{l}</div>
+                        <div className="grade-cell-value">{fmtGrade(v)}</div>
+                      </div>
+                    ))}
+                    <div className="grade-cell">
+                      <div className="grade-cell-label">Média</div>
+                      <div className={`grade-cell-value ${allN && media !== null ? (media >= 5 ? 'text-green-700' : 'text-red-600') : 'text-slate-400'}`}>
+                        {allN && media !== null ? media.toFixed(1) : '—'}
+                      </div>
+                    </div>
+                  </div>
+                  {e.final_exam !== null && (
+                    <p className="text-xs text-slate-500 mt-2">Exame Final: <strong>{fmtGrade(e.final_exam)}</strong></p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden sm:block table-wrap">
+            <div className="table-inner">
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className="table-th">Disciplina</th>
+                    <th className="table-th text-center">N1</th>
+                    <th className="table-th text-center">N2</th>
+                    <th className="table-th text-center">N3</th>
+                    <th className="table-th text-center">Média</th>
+                    <th className="table-th text-center">Exame Final</th>
+                    <th className="table-th text-center">Situação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {enrollments.map((e) => {
+                    const media = calcMedia(e.n1, e.n2, e.n3);
+                    const allN = [e.n1, e.n2, e.n3].filter((v) => v !== null).length === 3;
+                    const status = calcStatus(e);
+                    return (
+                      <tr key={e.enrollment_id} className="hover:bg-slate-50">
+                        <td className="table-td">
+                          <div className="font-medium">{e.name}</div>
+                          <div className="text-xs text-slate-400 font-mono">{e.code}</div>
+                        </td>
+                        <td className="table-td text-center">{fmtGrade(e.n1)}</td>
+                        <td className="table-td text-center">{fmtGrade(e.n2)}</td>
+                        <td className="table-td text-center">{fmtGrade(e.n3)}</td>
+                        <td className="table-td text-center">
+                          <span className={`font-semibold ${allN && media !== null ? (media >= 5 ? 'text-green-700' : media >= 3 ? 'text-orange-600' : 'text-red-600') : 'text-slate-400'}`}>
+                            {allN && media !== null ? media.toFixed(1) : '—'}
+                          </span>
+                        </td>
+                        <td className="table-td text-center">{fmtGrade(e.final_exam)}</td>
+                        <td className="table-td text-center"><span className={status.cls}>{status.label}</span></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p className="text-xs text-slate-400 mt-3">Aprovado: ≥ 5.0 · Em Exame: 3.0–4.9 · Rep. Nota: &lt; 3.0</p>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── FREQUÊNCIA ────────────────────────────────────────────────────────────────
+
+function FrequenciaTab({ enrollments }: { enrollments: Enrollment[] }) {
+  return (
+    <div className="card">
+      <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-4">Frequência Acadêmica</h2>
+      {enrollments.length === 0 ? (
+        <p className="text-slate-400 text-sm text-center py-8">Nenhuma disciplina matriculada.</p>
+      ) : (
+        <>
+          {/* Mobile cards */}
+          <div className="block sm:hidden space-y-3">
+            {enrollments.map((e) => {
+              const maxAbs = Math.floor(e.workload * 0.25);
+              const freqNum = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
+              const repFalta = e.total_classes > 0 && e.absences > maxAbs;
+              const atRisk = !repFalta && freqNum !== null && freqNum < 80;
+              return (
+                <div key={e.enrollment_id} className="border border-slate-200 rounded-xl p-4 bg-white">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="font-semibold text-slate-800 text-sm">{e.name}</p>
+                      <p className="text-xs text-slate-400 font-mono">{e.code} · {e.workload}h</p>
+                    </div>
+                    {repFalta ? <span className="badge-reprovado">Rep. Falta</span>
+                      : atRisk ? <span className="badge-risco">Risco</span>
+                      : e.total_classes === 0 ? <span className="badge-cursando">Aguardando</span>
+                      : <span className="badge-aprovado">Regular</span>}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    {[['Aulas', e.total_classes || 0], ['Faltas', e.absences || 0], ['Máx. Falta', maxAbs]].map(([l, v]) => (
+                      <div key={l as string} className="grade-cell">
+                        <div className="grade-cell-label">{l}</div>
+                        <div className={`grade-cell-value ${l === 'Faltas' && repFalta ? 'text-red-600' : ''}`}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {freqNum !== null && (
+                    <div>
+                      <div className="flex justify-between text-xs text-slate-500 mb-1">
+                        <span>Frequência</span>
+                        <span className={`font-semibold ${freqNum >= 75 ? 'text-green-700' : freqNum >= 60 ? 'text-orange-600' : 'text-red-600'}`}>
+                          {freqNum.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-200 rounded-full h-2">
+                        <div className={`h-2 rounded-full ${freqNum >= 75 ? 'bg-green-500' : freqNum >= 60 ? 'bg-orange-500' : 'bg-red-500'}`}
+                          style={{ width: `${Math.min(freqNum, 100)}%` }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden sm:block table-wrap">
+            <div className="table-inner">
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className="table-th">Disciplina</th>
+                    <th className="table-th text-center">C.H.</th>
+                    <th className="table-th text-center">Aulas</th>
+                    <th className="table-th text-center">Faltas</th>
+                    <th className="table-th text-center">Máx.</th>
+                    <th className="table-th text-center">Frequência</th>
+                    <th className="table-th text-center">Situação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {enrollments.map((e) => {
+                    const maxAbs = Math.floor(e.workload * 0.25);
+                    const freqNum = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
+                    const repFalta = e.total_classes > 0 && e.absences > maxAbs;
+                    const atRisk = !repFalta && freqNum !== null && freqNum < 80;
+                    return (
+                      <tr key={e.enrollment_id} className="hover:bg-slate-50">
+                        <td className="table-td">
+                          <div className="font-medium">{e.name}</div>
+                          <div className="text-xs text-slate-400 font-mono">{e.code}</div>
+                        </td>
+                        <td className="table-td text-center text-slate-500">{e.workload}h</td>
+                        <td className="table-td text-center">{e.total_classes || 0}</td>
+                        <td className="table-td text-center">
+                          <span className={repFalta ? 'text-red-600 font-bold' : atRisk ? 'text-orange-600 font-semibold' : ''}>{e.absences || 0}</span>
+                        </td>
+                        <td className="table-td text-center text-slate-500">{maxAbs}</td>
+                        <td className="table-td text-center">
+                          {freqNum !== null ? (
+                            <div className="flex items-center gap-2 justify-center">
+                              <div className="w-16 bg-slate-200 rounded-full h-1.5">
+                                <div className={`h-1.5 rounded-full ${freqNum >= 75 ? 'bg-green-500' : freqNum >= 60 ? 'bg-orange-500' : 'bg-red-500'}`}
+                                  style={{ width: `${Math.min(freqNum, 100)}%` }} />
+                              </div>
+                              <span className={`text-sm font-medium ${freqNum >= 75 ? 'text-green-700' : freqNum >= 60 ? 'text-orange-600' : 'text-red-600'}`}>
+                                {freqNum.toFixed(1)}%
+                              </span>
+                            </div>
+                          ) : <span className="text-slate-400">—</span>}
+                        </td>
+                        <td className="table-td text-center">
+                          {repFalta ? <span className="badge-reprovado">Rep. Falta</span>
+                            : atRisk ? <span className="badge-risco">Risco</span>
+                            : e.total_classes === 0 ? <span className="badge-cursando">Aguardando</span>
+                            : <span className="badge-aprovado">Regular</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p className="text-xs text-slate-400 mt-3">Mínimo obrigatório: 75% de frequência · Máximo: 25% de faltas</p>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── PERFIL ────────────────────────────────────────────────────────────────────
+
+function PerfilTab({ profile }: { profile: User | null }) {
+  if (!profile) return null;
+  const p = profile as User & { matricula?: string; semester?: number; cpf?: string; phone?: string; created_at?: string };
+
+  function fmtCPF(v?: string) {
+    if (!v) return 'não informado';
+    return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  }
+  function fmtPhone(v?: string) {
+    if (!v) return 'não informado';
+    const d = v.replace(/\D/g, '');
+    if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+    return v;
+  }
+
+  const items = [
+    ['Nome completo', profile.name],
+    ['E-mail', profile.email],
+    ['CPF', fmtCPF(p.cpf)],
+    ['Telefone', fmtPhone(p.phone)],
+    ['Matrícula', p.matricula ?? '—'],
+    ['Semestre', p.semester ? `${p.semester}º Semestre` : '—'],
+    ['Curso', 'Medicina'],
+    ['Ingresso', p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '—'],
+  ];
+
+  return (
+    <div className="card max-w-xl">
+      <div className="flex items-center gap-4 mb-5 pb-5 border-b border-slate-100">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-md flex-shrink-0">
+          {profile.name.charAt(0).toUpperCase()}
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-xl font-semibold text-slate-800 truncate">{profile.name}</h2>
+          <p className="text-sm text-slate-500">Aluno de Medicina · FAMED</p>
+          <span className="inline-block mt-1 text-xs font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded">{p.matricula}</span>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {items.map(([label, value]) => (
+          <div key={label} className="flex justify-between items-start gap-2 py-2 border-b border-slate-50">
+            <span className="text-sm text-slate-500 flex-shrink-0">{label}</span>
+            <span className="text-sm font-medium text-slate-800 text-right break-all">{value}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-5 p-3 sm:p-4 bg-blue-50 rounded-xl">
+        <p className="text-xs text-blue-700">
+          <strong>Precisa atualizar seus dados?</strong> Entre em contato com a Secretaria Acadêmica pelo e-mail{' '}
+          <span className="font-mono">secretaria@famed.edu.br</span>.
+        </p>
+      </div>
+    </div>
+  );
+}
