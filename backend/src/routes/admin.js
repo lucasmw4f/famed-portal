@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt  = require('bcryptjs');
+const crypto  = require('crypto');
 const db      = require('../database');
 const { verifyToken, requireAdmin } = require('../middleware/auth');
 const { encrypt, maskCPF, maskPhone } = require('../crypto-utils');
@@ -52,8 +53,11 @@ router.post('/students', (req, res) => {
 
   const hash = bcrypt.hashSync(password, 12); // rounds=12 em produção
   const year = new Date().getFullYear();
-  const count = Number(db.prepare('SELECT COUNT(*) as c FROM students').get().c);
-  const matricula = `MED${year}${String(count + 1).padStart(4, '0')}`;
+  let matricula;
+  do {
+    const rand = crypto.randomBytes(3).toString('hex').toUpperCase();
+    matricula = `MED${year}-${rand}`;
+  } while (db.prepare('SELECT 1 FROM students WHERE matricula = ?').get(matricula));
 
   // Criptografa dados sensíveis antes de persistir
   const cpfRaw   = cpf  ? String(cpf).replace(/\D/g, '').slice(0, 11)  : null;

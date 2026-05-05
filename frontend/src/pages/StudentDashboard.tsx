@@ -486,7 +486,7 @@ function PerfilTab({ profile, onPhotoUpdate }: { profile: User | null; onPhotoUp
     ['Semestre', p.semester ? `${p.semester}º Semestre` : '—'],
     ['Curso', 'Medicina (Bacharelado)'],
     ['Turno', 'Integral'],
-    ['Ingresso', p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '—'],
+    ['Ingresso', p.created_at ? (() => { const d = new Date(p.created_at); return `${d.getFullYear()}.${d.getMonth() < 6 ? 1 : 2}`; })() : '—'],
   ];
 
   return (

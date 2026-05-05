@@ -1,5 +1,6 @@
 const { DatabaseSync } = require('node:sqlite');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const path   = require('path');
 const { encrypt, decrypt } = require('./crypto-utils');
 
@@ -129,8 +130,11 @@ function seedStudent({ name, email, cpf, phone, semester, grades }) {
 
   const hash = bcrypt.hashSync('Aluno@2024', 10);
   const year = new Date().getFullYear();
-  const count = Number(db.prepare('SELECT COUNT(*) as c FROM students').get().c);
-  const matricula = `MED${year}${String(count + 1).padStart(4, '0')}`;
+  let matricula;
+  do {
+    const rand = crypto.randomBytes(3).toString('hex').toUpperCase();
+    matricula = `MED${year}-${rand}`;
+  } while (db.prepare('SELECT 1 FROM students WHERE matricula = ?').get(matricula));
 
   db.exec('BEGIN');
   try {
