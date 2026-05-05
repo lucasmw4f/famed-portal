@@ -101,8 +101,20 @@ function AlunosTab() {
                   {students.map((s) => (
                     <tr key={s.id} className="hover:bg-slate-50">
                       <td className="table-td">
-                        <div className="font-medium leading-tight">{s.name}</div>
-                        <div className="text-xs text-slate-400 sm:hidden">{s.email}</div>
+                        <div className="flex items-center gap-2.5">
+                          {(s as Student & { photo?: string }).photo ? (
+                            <img src={(s as Student & { photo?: string }).photo} alt={s.name}
+                              className="w-8 h-8 rounded-full object-cover border border-slate-200 flex-shrink-0" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                              {s.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-medium leading-tight">{s.name}</div>
+                            <div className="text-xs text-slate-400 sm:hidden">{s.email}</div>
+                          </div>
+                        </div>
                       </td>
                       <td className="table-td">
                         <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">{s.matricula}</span>

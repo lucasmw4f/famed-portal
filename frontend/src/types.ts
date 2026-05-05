@@ -4,6 +4,7 @@ export interface User {
   email: string;
   role: 'admin' | 'student';
   created_at: string;
+  photo?: string | null;
   // student fields
   student_id?: number;
   matricula?: string;

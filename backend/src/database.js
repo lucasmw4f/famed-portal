@@ -57,9 +57,10 @@ db.exec(`CREATE TABLE IF NOT EXISTS attendance (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )`);
 
-// Migração segura para bases existentes
+// Migrações seguras para bases existentes
 try { db.exec('ALTER TABLE students ADD COLUMN cpf TEXT'); } catch {}
 try { db.exec('ALTER TABLE students ADD COLUMN phone TEXT'); } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN photo TEXT'); } catch {}
 
 // ── SEED: ADMIN ───────────────────────────────────────────────────────────────
 
@@ -95,19 +96,19 @@ const allSubjects = [
   { code: 'MED402', name: 'Saúde Mental',                semester: 4, workload: 80  },
   { code: 'MED403', name: 'Radiologia Básica',           semester: 4, workload: 60  },
   { code: 'MED404', name: 'Saúde Coletiva II',           semester: 4, workload: 60  },
-  // 5º Semestre — 12 disciplinas
-  { code: 'MED501', name: 'Clínica Médica I',            semester: 5, workload: 160 },
-  { code: 'MED502', name: 'Cirurgia Geral I',            semester: 5, workload: 120 },
-  { code: 'MED503', name: 'Ginecologia',                 semester: 5, workload: 80  },
-  { code: 'MED504', name: 'Pediatria I',                 semester: 5, workload: 80  },
-  { code: 'MED505', name: 'Neurologia Clínica',          semester: 5, workload: 80  },
-  { code: 'MED506', name: 'Ortopedia e Traumatologia',   semester: 5, workload: 80  },
-  { code: 'MED507', name: 'Dermatologia',                semester: 5, workload: 60  },
-  { code: 'MED508', name: 'Urologia',                    semester: 5, workload: 60  },
-  { code: 'MED509', name: 'Oftalmologia',                semester: 5, workload: 60  },
-  { code: 'MED510', name: 'Otorrinolaringologia',        semester: 5, workload: 60  },
-  { code: 'MED511', name: 'Ética Médica e Bioética',     semester: 5, workload: 40  },
-  { code: 'MED512', name: 'Medicina de Urgência I',      semester: 5, workload: 80  },
+  // 5º Semestre — Propedêutica e Introdução Clínica (currículo real FMUSP/UNIFESP)
+  { code: 'MED501', name: 'Semiologia Geral',              semester: 5, workload: 120 },
+  { code: 'MED502', name: 'Propedêutica Cardiovascular',   semester: 5, workload: 80  },
+  { code: 'MED503', name: 'Propedêutica Respiratória',     semester: 5, workload: 80  },
+  { code: 'MED504', name: 'Propedêutica Abdominal',        semester: 5, workload: 80  },
+  { code: 'MED505', name: 'Propedêutica Neurológica',      semester: 5, workload: 80  },
+  { code: 'MED506', name: 'Farmacologia Clínica',          semester: 5, workload: 100 },
+  { code: 'MED507', name: 'Patologia Sistêmica',           semester: 5, workload: 100 },
+  { code: 'MED508', name: 'Saúde Coletiva III',            semester: 5, workload: 60  },
+  { code: 'MED509', name: 'Ética Médica e Bioética',       semester: 5, workload: 40  },
+  { code: 'MED510', name: 'Imagenologia Clínica',          semester: 5, workload: 80  },
+  { code: 'MED511', name: 'Introdução à Clínica',          semester: 5, workload: 60  },
+  { code: 'MED512', name: 'Habilidades Médicas I',         semester: 5, workload: 40  },
   // 6º Semestre
   { code: 'MED601', name: 'Clínica Médica II',           semester: 6, workload: 160 },
   { code: 'MED602', name: 'Cirurgia Geral II',           semester: 6, workload: 120 },

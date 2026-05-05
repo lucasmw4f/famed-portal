@@ -11,7 +11,7 @@ router.use(verifyToken, requireAdmin);
 
 router.get('/students', (req, res) => {
   const rows = db.prepare(`
-    SELECT u.id, u.name, u.email, u.created_at,
+    SELECT u.id, u.name, u.email, u.photo, u.created_at,
            s.id as student_id, s.matricula, s.semester, s.cpf, s.phone
     FROM users u
     JOIN students s ON s.user_id = u.id

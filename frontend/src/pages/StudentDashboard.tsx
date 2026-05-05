@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api';
 import type { Enrollment, User } from '../types';
@@ -75,7 +75,7 @@ export default function StudentDashboard() {
         {tab === 'inicio'     && <InicioTab enrollments={enrollments} profile={profile} />}
         {tab === 'boletim'    && <BoletimTab enrollments={enrollments} />}
         {tab === 'frequencia' && <FrequenciaTab enrollments={enrollments} />}
-        {tab === 'perfil'     && <PerfilTab profile={profile} />}
+        {tab === 'perfil'     && <PerfilTab profile={profile} onPhotoUpdate={(photo) => setProfile((p) => p ? { ...p, photo } : p)} />}
         {tab === 'declaracao' && <div className="card"><DeclaracaoMatricula profile={profile} /></div>}
       </main>
     </div>
@@ -402,7 +402,49 @@ function FrequenciaTab({ enrollments }: { enrollments: Enrollment[] }) {
 
 // ── PERFIL ────────────────────────────────────────────────────────────────────
 
-function PerfilTab({ profile }: { profile: User | null }) {
+function Avatar({ photo, name, size = 'lg' }: { photo?: string | null; name: string; size?: 'sm' | 'md' | 'lg' }) {
+  const sizes = { sm: 'w-9 h-9 text-sm', md: 'w-12 h-12 text-base', lg: 'w-24 h-24 text-3xl' };
+  if (photo) {
+    return (
+      <img src={photo} alt={name}
+        className={`${sizes[size]} rounded-full object-cover border-2 border-white shadow-md flex-shrink-0`} />
+    );
+  }
+  return (
+    <div className={`${sizes[size]} rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold flex-shrink-0 shadow-md`}>
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
+function compressImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 300;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
+        else { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = reject;
+      img.src = e.target!.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function PerfilTab({ profile, onPhotoUpdate }: { profile: User | null; onPhotoUpdate: (photo: string) => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+
   if (!profile) return null;
   const p = profile as User & { matricula?: string; semester?: number; cpf?: string; phone?: string; created_at?: string };
 
@@ -417,6 +459,24 @@ function PerfilTab({ profile }: { profile: User | null }) {
     return v;
   }
 
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setError('Selecione uma imagem válida.'); return; }
+    if (file.size > 10 * 1024 * 1024) { setError('Imagem muito grande. Máximo 10MB.'); return; }
+    setError(''); setUploading(true);
+    try {
+      const compressed = await compressImage(file);
+      await api.put('/student/photo', { photo: compressed });
+      onPhotoUpdate(compressed);
+    } catch {
+      setError('Erro ao salvar foto. Tente novamente.');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  }
+
   const items = [
     ['Nome completo', profile.name],
     ['E-mail', profile.email],
@@ -424,26 +484,49 @@ function PerfilTab({ profile }: { profile: User | null }) {
     ['Telefone', fmtPhone(p.phone)],
     ['Matrícula', p.matricula ?? '—'],
     ['Semestre', p.semester ? `${p.semester}º Semestre` : '—'],
-    ['Curso', 'Medicina'],
+    ['Curso', 'Medicina (Bacharelado)'],
+    ['Turno', 'Integral'],
     ['Ingresso', p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '—'],
   ];
 
   return (
     <div className="card max-w-xl">
-      <div className="flex items-center gap-4 mb-5 pb-5 border-b border-slate-100">
-        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-md flex-shrink-0">
-          {profile.name.charAt(0).toUpperCase()}
+      {/* Foto + identidade */}
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-6 pb-6 border-b border-slate-100">
+        <div className="relative flex-shrink-0">
+          <Avatar photo={profile.photo} name={profile.name} size="lg" />
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center text-white shadow-lg transition-colors disabled:opacity-50"
+            title="Alterar foto"
+          >
+            {uploading ? (
+              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            )}
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
         </div>
-        <div className="min-w-0">
-          <h2 className="text-base sm:text-xl font-semibold text-slate-800 truncate">{profile.name}</h2>
-          <p className="text-sm text-slate-500">Aluno de Medicina · FAMED</p>
-          <span className="inline-block mt-1 text-xs font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded">{p.matricula}</span>
+
+        <div className="text-center sm:text-left min-w-0">
+          <h2 className="text-lg sm:text-xl font-bold text-slate-800">{profile.name}</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Aluno de Medicina · FAMED</p>
+          <span className="inline-block mt-2 text-xs font-mono bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">{p.matricula}</span>
+          {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+          <p className="text-xs text-slate-400 mt-2">Clique na câmera para alterar a foto</p>
         </div>
       </div>
 
-      <div className="space-y-3">
+      {/* Dados */}
+      <div className="space-y-1">
         {items.map(([label, value]) => (
-          <div key={label} className="flex justify-between items-start gap-2 py-2 border-b border-slate-50">
+          <div key={label} className="flex justify-between items-start gap-2 py-2.5 border-b border-slate-50 last:border-0">
             <span className="text-sm text-slate-500 flex-shrink-0">{label}</span>
             <span className="text-sm font-medium text-slate-800 text-right break-all">{value}</span>
           </div>

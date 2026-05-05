@@ -31,7 +31,7 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json({ limit: '50kb' })); // Limite no payload — evita ataques de body gigante
+app.use(express.json({ limit: '2mb' })); // 2MB permite upload de foto comprimida em base64
 
 // ── Rate limiting: login ───────────────────────────────────────────────────────
 // Máximo 10 tentativas por IP a cada 15 minutos — bloqueia força bruta.
