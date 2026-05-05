@@ -478,15 +478,13 @@ function PerfilTab({ profile, onPhotoUpdate }: { profile: User | null; onPhotoUp
   }
 
   const items = [
-    ['Nome completo', profile.name],
-    ['E-mail', profile.email],
-    ['CPF', fmtCPF(p.cpf)],
-    ['Telefone', fmtPhone(p.phone)],
-    ['Matrícula', p.matricula ?? '—'],
-    ['Semestre', p.semester ? `${p.semester}º Semestre` : '—'],
     ['Curso', 'Medicina (Bacharelado)'],
     ['Turno', 'Integral'],
     ['Ingresso', p.semester ? (() => { const now = new Date(); const cur = now.getFullYear() * 2 + (now.getMonth() < 6 ? 0 : 1); const ing = cur - (p.semester - 1); const y = Math.floor(ing / 2); const s = (ing % 2) + 1; return `${String(s).padStart(2, '0')}/${y}`; })() : '—'],
+    ['Semestre', p.semester ? `${p.semester}º Semestre` : '—'],
+    ['Matrícula', p.matricula ?? '—'],
+    ['CPF', fmtCPF(p.cpf)],
+    ['Telefone', fmtPhone(p.phone)],
   ];
 
   return (
