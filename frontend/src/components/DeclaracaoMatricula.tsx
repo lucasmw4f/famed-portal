@@ -26,7 +26,7 @@ export default function DeclaracaoMatricula({ profile }: { profile: User | null 
   const verifyCode = useMemo(() => {
     const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
     const mat = p?.matricula?.slice(-4) ?? 'XXXX';
-    return `FAMED-${year}-${mat}-${rand}`;
+    return `UFSCar-${year}-${mat}-${rand}`;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p?.matricula]);
 
@@ -41,26 +41,28 @@ export default function DeclaracaoMatricula({ profile }: { profile: User | null 
 
     const photoTag = photo
       ? `<img src="${photo}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #e2e8f0;"/>`
-      : `<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;font-weight:bold;">${(p?.name ?? 'A').charAt(0).toUpperCase()}</div>`;
+      : `<div style="width:80px;height:80px;border-radius:50%;background:#F26522;display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;font-weight:bold;">${(p?.name ?? 'A').charAt(0).toUpperCase()}</div>`;
 
     const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
-<title>Declaração de Matrícula — FAMED</title>
+<title>Declaração de Matrícula — UFSCar</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:Georgia,serif;color:#1e293b;background:#fff;width:794px;margin:0 auto}
 @page{size:A4;margin:0}
 .doc{display:flex;flex-direction:column;min-height:1123px}
-.hdr{background:#1e3a5f;color:#fff;padding:24px 48px;display:flex;align-items:center;gap:20px}
-.hdr-logo{width:64px;height:64px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.hdr h1{font-size:20px;font-weight:bold;letter-spacing:1px;font-family:Arial,sans-serif;margin-bottom:3px}
-.hdr p{font-size:11px;opacity:.85;font-family:Arial,sans-serif}
-.stripe{height:5px;background:linear-gradient(90deg,#1d4ed8,#0ea5e9)}
+.topbar{background:#071D41;padding:6px 48px}
+.topbar p{font-size:9px;color:#fff;opacity:.7;font-family:Arial,sans-serif;letter-spacing:.3px}
+.hdr{background:#F26522;color:#fff;padding:20px 48px;display:flex;align-items:center;gap:20px}
+.hdr-logo{width:60px;height:60px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr h1{font-size:18px;font-weight:bold;letter-spacing:.8px;font-family:Arial,sans-serif;margin-bottom:3px}
+.hdr p{font-size:10px;opacity:.85;font-family:Arial,sans-serif}
+.stripe{height:4px;background:#071D41}
 .title-area{text-align:center;padding:32px 48px 20px}
 .sup{font-size:10px;text-transform:uppercase;letter-spacing:3px;color:#64748b;font-family:Arial,sans-serif;margin-bottom:6px}
-.title{font-size:20px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #1e3a5f;display:inline-block;padding-bottom:6px}
+.title{font-size:20px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid #F26522;display:inline-block;padding-bottom:6px}
 .docnum{font-size:10px;color:#94a3b8;margin-top:8px;font-family:'Courier New',monospace}
 .body{padding:0 48px;flex-grow:1}
 p.text{font-size:13.5px;line-height:1.85;margin-bottom:14px;text-align:justify}
@@ -79,26 +81,28 @@ p.text{font-size:13.5px;line-height:1.85;margin-bottom:14px;text-align:justify}
 </head>
 <body>
 <div class="doc">
+  <div class="topbar"><p>Ministério da Educação · Universidade Federal de São Carlos — UFSCar</p></div>
   <div class="hdr">
     <div class="hdr-logo">
-      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#1e3a5f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#F26522" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 14l9-5-9-5-9 5 9 5z"/>
+        <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
       </svg>
     </div>
     <div>
-      <h1>FACULDADE DE MEDICINA — FAMED</h1>
-      <p>CNPJ: 12.345.678/0001-90 &nbsp;·&nbsp; São Paulo, SP &nbsp;·&nbsp; www.famed.edu.br</p>
-      <p>Credenciada pelo MEC — Portaria nº 1.234, de 15 de março de 2010</p>
+      <h1>UNIVERSIDADE FEDERAL DE SÃO CARLOS — UFSCar</h1>
+      <p>CNPJ: 48.709.315/0001-45 &nbsp;·&nbsp; São Carlos, SP &nbsp;·&nbsp; www.ufscar.br</p>
+      <p>Autarquia Federal vinculada ao Ministério da Educação — Lei nº 3.835, de 13 de dezembro de 1960</p>
     </div>
   </div>
   <div class="stripe"></div>
   <div class="title-area">
-    <div class="sup">Secretaria Acadêmica — Documento Oficial</div>
+    <div class="sup">Secretaria Geral de Graduação — Documento Oficial</div>
     <div class="title">Declaração de Matrícula Acadêmica</div>
     <div class="docnum">${verifyCode}</div>
   </div>
   <div class="body">
-    <p class="text">A <strong>SECRETARIA ACADÊMICA DA FACULDADE DE MEDICINA — FAMED</strong>, no uso de suas atribuições legais e regimentais, declara para os devidos fins que o(a) discente identificado(a) abaixo:</p>
+    <p class="text">A <strong>SECRETARIA GERAL DE GRADUAÇÃO DA UNIVERSIDADE FEDERAL DE SÃO CARLOS — UFSCar</strong>, no uso de suas atribuições legais e regimentais, declara para os devidos fins que o(a) discente identificado(a) abaixo:</p>
     <div class="box">
       <div class="box-photo">${photoTag}</div>
       <div class="box-grid">
@@ -114,16 +118,16 @@ p.text{font-size:13.5px;line-height:1.85;margin-bottom:14px;text-align:justify}
         <div class="fi"><label>Regime</label><span>Semestral Presencial</span></div>
       </div>
     </div>
-    <p class="text">encontra-se <strong>regularmente matriculado(a)</strong> no Curso de <strong>MEDICINA (Bacharelado)</strong> desta Instituição de Ensino Superior, devidamente credenciada pelo Ministério da Educação, cumprindo integralmente os requisitos acadêmicos e administrativos estabelecidos por esta Instituição no período letivo vigente.</p>
+    <p class="text">encontra-se <strong>regularmente matriculado(a)</strong> no Curso de <strong>MEDICINA (Bacharelado)</strong> desta Instituição Federal de Ensino Superior, vinculada ao Ministério da Educação, cumprindo integralmente os requisitos acadêmicos e administrativos estabelecidos por esta Universidade no período letivo vigente.</p>
     <p class="text">A presente declaração é válida por <strong>90 (noventa) dias</strong> a contar da data de emissão e foi expedida a pedido do(a) interessado(a), para os fins que se fizerem necessários, não substituindo documentos oficiais emitidos pelo Ministério da Educação.</p>
-    <p class="date-line">São Paulo, ${date}.</p>
-    <div class="seal">Documento gerado eletronicamente pelo Sistema Acadêmico FAMED &nbsp;·&nbsp; Autenticidade verificável em www.famed.edu.br/verificar &nbsp;·&nbsp; Cód. ${verifyCode}</div>
+    <p class="date-line">São Carlos, ${date}.</p>
+    <div class="seal">Documento gerado eletronicamente pelo Sistema Acadêmico UFSCar &nbsp;·&nbsp; Autenticidade verificável em www.ufscar.br/verificar &nbsp;·&nbsp; Cód. ${verifyCode}</div>
   </div>
   <div class="ftr">
     <div class="ftr-left">
-      <div><strong>FAMED — Faculdade de Medicina</strong></div>
-      <div>Av. das Ciências da Saúde, 100 — Jd. Universitário — São Paulo, SP — CEP 01310-100</div>
-      <div>secretaria@famed.edu.br &nbsp;·&nbsp; (11) 3000-0000</div>
+      <div><strong>UFSCar — Universidade Federal de São Carlos</strong></div>
+      <div>Rod. Washington Luís, km 235 — São Carlos, SP — CEP 13565-905</div>
+      <div>secretaria@ufscar.br &nbsp;·&nbsp; (16) 3351-8111</div>
     </div>
     <div class="ftr-right">
       <div class="code">${verifyCode}</div>
@@ -165,7 +169,10 @@ p.text{font-size:13.5px;line-height:1.85;margin-bottom:14px;text-align:justify}
           <p className="text-xs sm:text-sm text-slate-500">Gerada em {dateExtense()} · {verifyCode}</p>
         </div>
         <button onClick={handlePrint}
-          className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-sm whitespace-nowrap">
+          className="flex items-center gap-2 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-sm whitespace-nowrap"
+          style={{ background: '#F26522' }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#E05A15')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = '#F26522')}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -176,28 +183,35 @@ p.text{font-size:13.5px;line-height:1.85;margin-bottom:14px;text-align:justify}
 
       {/* Preview responsivo */}
       <div className="rounded-xl overflow-hidden border border-slate-200 shadow-md">
+        {/* Topo institucional */}
+        <div className="bg-[#071D41] px-4 sm:px-6 py-1.5">
+          <p className="text-white/70 text-xs">Ministério da Educação · Universidade Federal de São Carlos — UFSCar</p>
+        </div>
+
         {/* Header */}
-        <div className="bg-[#1e3a5f] text-white p-4 sm:p-6 flex items-center gap-3 sm:gap-5">
+        <div className="bg-[#F26522] text-white p-4 sm:p-6 flex items-center gap-3 sm:gap-5">
           <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 sm:w-8 sm:h-8 text-[#1e3a5f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 sm:w-8 sm:h-8 text-[#F26522]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                d="M12 14l9-5-9-5-9 5 9 5z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+                d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
             </svg>
           </div>
           <div className="min-w-0">
-            <h1 className="text-sm sm:text-lg font-bold tracking-wide">FACULDADE DE MEDICINA — FAMED</h1>
-            <p className="text-xs opacity-80 mt-0.5">CNPJ: 12.345.678/0001-90 · São Paulo, SP</p>
-            <p className="text-xs opacity-60 mt-0.5 hidden sm:block">Credenciada pelo MEC — Portaria nº 1.234, de 15 de março de 2010</p>
+            <h1 className="text-sm sm:text-lg font-bold tracking-wide">UNIVERSIDADE FEDERAL DE SÃO CARLOS — UFSCar</h1>
+            <p className="text-xs opacity-80 mt-0.5">CNPJ: 48.709.315/0001-45 · São Carlos, SP</p>
+            <p className="text-xs opacity-60 mt-0.5 hidden sm:block">Autarquia Federal vinculada ao Ministério da Educação</p>
           </div>
         </div>
 
-        {/* Stripe */}
-        <div className="h-1" style={{ background: 'linear-gradient(90deg,#1d4ed8,#0ea5e9)' }} />
+        {/* Stripe dourada */}
+        <div className="h-1" style={{ background: '#071D41' }} />
 
         {/* Título */}
         <div className="text-center py-5 sm:py-7 px-4">
-          <p className="text-xs uppercase tracking-widest text-slate-400 mb-2">Secretaria Acadêmica — Documento Oficial</p>
-          <h2 className="text-sm sm:text-lg font-bold uppercase tracking-wide text-slate-800 inline-block border-b-2 border-[#1e3a5f] pb-2">
+          <p className="text-xs uppercase tracking-widest text-slate-400 mb-2">Secretaria Geral de Graduação — Documento Oficial</p>
+          <h2 className="text-sm sm:text-lg font-bold uppercase tracking-wide text-slate-800 inline-block border-b-2 border-[#F26522] pb-2">
             Declaração de Matrícula Acadêmica
           </h2>
           <p className="text-xs text-slate-400 mt-2 font-mono">{verifyCode}</p>
@@ -206,7 +220,7 @@ p.text{font-size:13.5px;line-height:1.85;margin-bottom:14px;text-align:justify}
         {/* Corpo */}
         <div className="px-4 sm:px-8 pb-6">
           <p className="text-xs sm:text-sm leading-relaxed text-slate-700 mb-4 text-justify">
-            A <strong>SECRETARIA ACADÊMICA DA FACULDADE DE MEDICINA — FAMED</strong>, no uso de suas
+            A <strong>SECRETARIA GERAL DE GRADUAÇÃO DA UNIVERSIDADE FEDERAL DE SÃO CARLOS — UFSCar</strong>, no uso de suas
             atribuições legais e regimentais, declara para os devidos fins que o(a) discente identificado(a) abaixo:
           </p>
 
@@ -217,7 +231,8 @@ p.text{font-size:13.5px;line-height:1.85;margin-bottom:14px;text-align:justify}
                 <img src={p.photo} alt={p?.name}
                   className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-slate-300" />
               ) : (
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-blue-400 to-blue-700 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl font-bold"
+                  style={{ background: '#F26522' }}>
                   {(p?.name ?? 'A').charAt(0).toUpperCase()}
                 </div>
               )}
@@ -234,17 +249,17 @@ p.text{font-size:13.5px;line-height:1.85;margin-bottom:14px;text-align:justify}
 
           <p className="text-xs sm:text-sm leading-relaxed text-slate-700 mb-3 text-justify">
             encontra-se <strong>regularmente matriculado(a)</strong> no Curso de <strong>MEDICINA (Bacharelado)</strong> desta
-            Instituição de Ensino Superior, devidamente credenciada pelo Ministério da Educação, cumprindo
+            Instituição Federal de Ensino Superior, vinculada ao Ministério da Educação, cumprindo
             integralmente os requisitos acadêmicos no período letivo vigente.
           </p>
           <p className="text-xs sm:text-sm leading-relaxed text-slate-700 mb-5 text-justify">
             A presente declaração é válida por <strong>90 (noventa) dias</strong> a contar da data de emissão
             e foi expedida a pedido do(a) interessado(a).
           </p>
-          <p className="text-xs sm:text-sm text-slate-700 mb-4">São Paulo, {dateExtense()}.</p>
+          <p className="text-xs sm:text-sm text-slate-700 mb-4">São Carlos, {dateExtense()}.</p>
 
           <div className="border border-dashed border-slate-300 rounded-lg px-4 py-3 text-center text-xs text-slate-400">
-            Documento gerado eletronicamente pelo Sistema Acadêmico FAMED · Autenticidade verificável em www.famed.edu.br/verificar · Cód. {verifyCode}
+            Documento gerado eletronicamente pelo Sistema Acadêmico UFSCar · Autenticidade verificável em www.ufscar.br/verificar · Cód. {verifyCode}
           </div>
         </div>
 
@@ -252,9 +267,9 @@ p.text{font-size:13.5px;line-height:1.85;margin-bottom:14px;text-align:justify}
         <div className="bg-slate-50 border-t border-slate-200 px-4 sm:px-8 py-3">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-xs text-slate-500">
             <div className="leading-relaxed">
-              <p><strong>FAMED — Faculdade de Medicina</strong></p>
-              <p>Av. das Ciências da Saúde, 100 — São Paulo, SP — CEP 01310-100</p>
-              <p>secretaria@famed.edu.br · (11) 3000-0000</p>
+              <p><strong>UFSCar — Universidade Federal de São Carlos</strong></p>
+              <p>Rod. Washington Luís, km 235 — São Carlos, SP — CEP 13565-905</p>
+              <p>secretaria@ufscar.br · (16) 3351-8111</p>
             </div>
             <div className="sm:text-right leading-relaxed">
               <p className="font-mono font-bold text-slate-600">{verifyCode}</p>

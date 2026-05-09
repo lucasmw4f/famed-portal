@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../api';
 import type { Enrollment, User } from '../types';
-import { calcMedia, calcStatus, fmtGrade, fmtFreq } from '../types';
+import { calcMedia, calcStatus, fmtGrade } from '../types';
 import DeclaracaoMatricula from '../components/DeclaracaoMatricula';
 
 type Tab = 'inicio' | 'boletim' | 'frequencia' | 'perfil' | 'declaracao';
@@ -22,61 +22,83 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-slate-400">Carregando...</p>
+          <div className="w-7 h-7 border-2 border-[#F26522] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-400">Carregando dados acadêmicos...</p>
         </div>
       </div>
     );
   }
 
-  const tabs = [
+  const tabs: { key: Tab; label: string }[] = [
     { key: 'inicio',     label: 'Início' },
     { key: 'boletim',    label: 'Boletim' },
     { key: 'frequencia', label: 'Frequência' },
     { key: 'perfil',     label: 'Perfil' },
-    { key: 'declaracao', label: '📄 Declaração' },
-  ] as { key: Tab; label: string }[];
+    { key: 'declaracao', label: 'Declaração' },
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="bg-blue-800 text-white shadow-md">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-14 sm:h-16">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <span className="font-bold text-base sm:text-lg tracking-tight">FAMED</span>
-              <span className="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded-full hidden sm:inline">Portal do Aluno</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <span className="text-sm text-blue-200 hidden md:block truncate max-w-[160px]">{user?.name}</span>
-            <button onClick={logout} className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">Sair</button>
+
+      {/* Barra gov.br */}
+      <div className="bg-[#071D41]">
+        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-9">
+          <span className="text-white font-bold text-sm tracking-wide">gov.br</span>
+          <div className="hidden sm:flex items-center gap-5 text-xs text-white/60">
+            <span>ACESSO À INFORMAÇÃO</span>
+            <span>PARTICIPE</span>
+            <span>LEGISLAÇÃO</span>
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-4 sm:py-6">
-        <div className="tab-bar">
-          {tabs.map((t) => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className={`tab-btn ${tab === t.key ? 'tab-btn-active' : 'tab-btn-inactive'}`}>
-              {t.label}
+      {/* Header laranja UFSCar */}
+      <div className="bg-[#F26522]">
+        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between py-4">
+          <div>
+            <p className="text-white font-black text-2xl sm:text-3xl leading-none tracking-tight">UFSCar</p>
+            <p className="text-white/90 text-xs mt-0.5">Universidade Federal de São Carlos</p>
+          </div>
+          <div className="flex items-center gap-3 sm:gap-5">
+            <span className="text-white/80 text-sm hidden md:block truncate max-w-[200px]">{user?.name}</span>
+            <button onClick={logout} className="text-xs border border-white/50 hover:bg-white/20 text-white px-3 py-1.5 rounded transition-colors">
+              Sair
             </button>
-          ))}
+          </div>
         </div>
+        <div className="max-w-6xl mx-auto px-4 pb-0 hidden md:flex items-center gap-7 text-sm text-white/80 border-t border-white/20">
+          <span className="py-2 cursor-default">A UFSCar</span>
+          <span className="py-2 cursor-default">Gestão</span>
+          <span className="py-2 cursor-default">Processos Seletivos</span>
+          <span className="py-2 cursor-default">Acesso à Informação</span>
+          <span className="py-2 cursor-default">Contatos</span>
+        </div>
+      </div>
 
+      {/* Barra de abas */}
+      <div className="bg-[#071D41]">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            {tabs.map((t) => (
+              <button key={t.key} onClick={() => setTab(t.key)}
+                className={`px-5 py-3 text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
+                  tab === t.key ? 'text-white border-b-2 border-[#F26522]' : 'text-white/55 hover:text-white/85'
+                }`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <main className="max-w-6xl mx-auto px-4 py-6">
         {tab === 'inicio'     && <InicioTab enrollments={enrollments} profile={profile} />}
         {tab === 'boletim'    && <BoletimTab enrollments={enrollments} />}
         {tab === 'frequencia' && <FrequenciaTab enrollments={enrollments} />}
         {tab === 'perfil'     && <PerfilTab profile={profile} onPhotoUpdate={(photo) => setProfile((p) => p ? { ...p, photo } : p)} />}
-        {tab === 'declaracao' && <div className="card"><DeclaracaoMatricula profile={profile} /></div>}
+        {tab === 'declaracao' && <div className="bg-white border border-slate-200 rounded-lg p-4 sm:p-6"><DeclaracaoMatricula profile={profile} /></div>}
       </main>
     </div>
   );
@@ -86,97 +108,131 @@ export default function StudentDashboard() {
 
 function InicioTab({ enrollments, profile }: { enrollments: Enrollment[]; profile: User | null }) {
   const p = profile as User & { matricula?: string; semester?: number };
-  const withGrades = enrollments.filter((e) => e.n1 !== null && e.n2 !== null && e.n3 !== null);
-  const medias = withGrades.map((e) => calcMedia(e.n1, e.n2, e.n3)).filter((m): m is number => m !== null);
-  const mediaGeral = medias.length ? medias.reduce((a, b) => a + b, 0) / medias.length : null;
-  const aprovados = withGrades.filter((e) => { const m = calcMedia(e.n1, e.n2, e.n3); return m !== null && m >= 5; }).length;
-  const reprovados = withGrades.filter((e) => calcStatus(e).label.startsWith('Rep')).length;
-  const emRisco = enrollments.filter((e) => {
+
+  const withGrades   = enrollments.filter((e) => e.n1 !== null && e.n2 !== null && e.n3 !== null);
+  const medias       = withGrades.map((e) => calcMedia(e.n1, e.n2, e.n3)).filter((m): m is number => m !== null);
+  const mediaGeral   = medias.length ? medias.reduce((a, b) => a + b, 0) / medias.length : null;
+  const aprovados    = withGrades.filter((e) => { const m = calcMedia(e.n1, e.n2, e.n3); return m !== null && m >= 5; }).length;
+  const emExame      = withGrades.filter((e) => { const m = calcMedia(e.n1, e.n2, e.n3); return m !== null && m >= 3 && m < 5; }).length;
+  const reprovados   = withGrades.filter((e) => calcStatus(e).label.startsWith('Rep')).length;
+  const emRisco      = enrollments.filter((e) => {
     const max = Math.floor(e.workload * 0.25);
     return e.total_classes > 0 && e.absences > max * 0.7 && e.absences <= max;
   }).length;
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Banner */}
-      <div className="bg-gradient-to-r from-blue-700 to-blue-500 rounded-2xl p-4 sm:p-6 text-white">
-        <p className="text-blue-100 text-sm mb-1">Bem-vindo(a) de volta,</p>
-        <h2 className="text-xl sm:text-2xl font-bold">{profile?.name}</h2>
-        <div className="flex flex-wrap gap-2 mt-3 text-xs sm:text-sm">
-          <span className="bg-white/20 px-3 py-1 rounded-full">Matrícula: <strong>{p?.matricula ?? '—'}</strong></span>
-          <span className="bg-white/20 px-3 py-1 rounded-full">{p?.semester ?? '—'}º Semestre</span>
-          <span className="bg-white/20 px-3 py-1 rounded-full">Medicina</span>
+    <div className="space-y-5">
+
+      {/* Cabeçalho do aluno */}
+      <div className="bg-white border border-slate-200 rounded-lg">
+        <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
+          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Dados do Discente</h2>
+        </div>
+        <div className="px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-3">
+          <InfoField label="Nome" value={profile?.name ?? '—'} wide />
+          <InfoField label="Matrícula" value={p?.matricula ?? '—'} />
+          <InfoField label="Curso" value="Medicina (Bacharelado)" />
+          <InfoField label="Semestre" value={p?.semester ? `${p.semester}º Semestre` : '—'} />
         </div>
       </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Disciplinas"  value={String(enrollments.length)}        sub="matriculadas"        color="blue"  icon="📚" />
-        <StatCard label="Média Geral"  value={mediaGeral !== null ? mediaGeral.toFixed(1) : '—'} sub={mediaGeral === null ? 'sem notas' : mediaGeral >= 5 ? 'regular' : 'atenção'} color={mediaGeral === null ? 'gray' : mediaGeral >= 5 ? 'green' : 'red'} icon="📊" />
-        <StatCard label="Aprovado em"  value={String(aprovados)}                 sub={`de ${withGrades.length}`} color="green" icon="✅" />
-        <StatCard label="Reprovações"  value={String(reprovados)}                sub="até o momento"       color={reprovados > 0 ? 'red' : 'green'} icon="⚠️" />
+      {/* Indicadores acadêmicos */}
+      <div className="bg-white border border-slate-200 rounded-lg">
+        <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
+          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Indicadores do Período</h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-slate-100">
+          <Metric label="Disciplinas" value={String(enrollments.length)} sub="matriculadas" />
+          <Metric label="Média Geral" value={mediaGeral !== null ? mediaGeral.toFixed(2) : '—'}
+            sub={mediaGeral === null ? 'sem notas lançadas' : mediaGeral >= 5 ? 'situação regular' : 'abaixo do mínimo'}
+            alert={mediaGeral !== null && mediaGeral < 5} />
+          <Metric label="Aprovações" value={String(aprovados)} sub={`de ${withGrades.length} avaliadas`} positive={aprovados > 0} />
+          <Metric label="Em Exame" value={String(emExame)} sub="aguardando exame final" alert={emExame > 0} />
+          <Metric label="Reprovações" value={String(reprovados)} sub="no período" alert={reprovados > 0} />
+        </div>
       </div>
 
-      {/* Situação por disciplina */}
-      <div className="card">
-        <h3 className="text-sm sm:text-base font-semibold text-slate-800 mb-3">Situação por Disciplina</h3>
+      {/* Alerta de frequência */}
+      {emRisco > 0 && (
+        <div className="border-l-4 border-amber-400 bg-amber-50 px-4 py-3 rounded-r-lg">
+          <p className="text-sm font-semibold text-amber-800">Alerta de Frequência</p>
+          <p className="text-sm text-amber-700 mt-0.5">
+            {emRisco} disciplina(s) com frequência próxima ao limite mínimo de 75%. Risco de reprovação por falta.
+          </p>
+        </div>
+      )}
+
+      {/* Quadro geral de disciplinas */}
+      <div className="bg-white border border-slate-200 rounded-lg">
+        <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
+          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Quadro Geral de Disciplinas</h2>
+        </div>
         {enrollments.length === 0 ? (
-          <p className="text-slate-400 text-sm text-center py-4">Nenhuma disciplina matriculada.</p>
+          <p className="text-slate-400 text-sm text-center py-8">Nenhuma disciplina matriculada no período.</p>
         ) : (
-          <div className="space-y-2">
-            {enrollments.map((e) => {
-              const s = calcStatus(e);
-              const media = calcMedia(e.n1, e.n2, e.n3);
-              const allN = [e.n1, e.n2, e.n3].filter((v) => v !== null).length === 3;
-              const maxAbs = Math.floor(e.workload * 0.25);
-              const freqPct = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
-              const freqWarn = freqPct !== null && freqPct < 80;
-              return (
-                <div key={e.enrollment_id} className="flex items-center gap-2 p-2.5 sm:p-3 rounded-lg hover:bg-slate-50 border border-slate-100">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800 truncate">{e.name}</p>
-                    <div className="flex flex-wrap gap-x-3 mt-0.5 text-xs text-slate-500">
-                      <span>Média: <strong className={allN && media !== null ? (media >= 5 ? 'text-green-700' : 'text-red-600') : 'text-slate-400'}>{allN && media !== null ? media.toFixed(1) : '—'}</strong></span>
-                      <span className={freqWarn ? 'text-orange-600 font-semibold' : ''}>Freq: {freqPct !== null ? freqPct.toFixed(0) + '%' : '—'}{freqWarn && ' ⚠️'}</span>
-                      <span className="hidden sm:inline">Faltas: {e.absences}/{maxAbs}</span>
-                    </div>
-                  </div>
-                  <span className={s.cls}>{s.label}</span>
-                </div>
-              );
-            })}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px]">
+              <thead>
+                <tr className="bg-slate-50 text-left">
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Código</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Disciplina</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Média</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Freq.</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Situação</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {enrollments.map((e) => {
+                  const s = calcStatus(e);
+                  const media = calcMedia(e.n1, e.n2, e.n3);
+                  const allN = [e.n1, e.n2, e.n3].every((v) => v !== null);
+                  const maxAbs = Math.floor(e.workload * 0.25);
+                  const freqPct = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
+                  const freqWarn = freqPct !== null && freqPct < 80;
+                  const repFalta = e.total_classes > 0 && e.absences > maxAbs;
+                  return (
+                    <tr key={e.enrollment_id} className="hover:bg-slate-50/70">
+                      <td className="px-4 py-2.5 text-xs font-mono text-slate-400">{e.code}</td>
+                      <td className="px-4 py-2.5 text-sm text-slate-800">{e.name}</td>
+                      <td className="px-4 py-2.5 text-sm text-center font-semibold">
+                        <span className={allN && media !== null ? (media >= 5 ? 'text-green-700' : media >= 3 ? 'text-amber-600' : 'text-red-600') : 'text-slate-300'}>
+                          {allN && media !== null ? media.toFixed(1) : '—'}
+                        </span>
+                      </td>
+                      <td className={`px-4 py-2.5 text-sm text-center ${repFalta ? 'text-red-600 font-semibold' : freqWarn ? 'text-amber-600 font-semibold' : 'text-slate-600'}`}>
+                        {freqPct !== null ? freqPct.toFixed(0) + '%' : '—'}
+                      </td>
+                      <td className="px-4 py-2.5 text-center"><span className={s.cls}>{s.label}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
-
-      {emRisco > 0 && (
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex gap-3">
-          <span className="text-orange-500 text-lg mt-0.5 flex-shrink-0">⚠️</span>
-          <div>
-            <p className="text-sm font-semibold text-orange-800">Atenção à frequência</p>
-            <p className="text-xs sm:text-sm text-orange-700">
-              Você tem {emRisco} disciplina(s) com frequência se aproximando do limite. Fique atento para não ser reprovado por falta.
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-function StatCard({ label, value, sub, color, icon }: { label: string; value: string; sub: string; color: string; icon: string }) {
-  const colors: Record<string, string> = {
-    blue:  'from-blue-50  to-blue-100  border-blue-200  text-blue-800',
-    green: 'from-green-50 to-green-100 border-green-200 text-green-800',
-    red:   'from-red-50   to-red-100   border-red-200   text-red-800',
-    gray:  'from-slate-50 to-slate-100 border-slate-200 text-slate-600',
-  };
+function InfoField({ label, value, wide }: { label: string; value: string; wide?: boolean }) {
   return (
-    <div className={`bg-gradient-to-br ${colors[color]} border rounded-xl p-3 sm:p-4`}>
-      <div className="text-lg sm:text-xl mb-1">{icon}</div>
-      <div className="text-xl sm:text-2xl font-bold">{value}</div>
-      <div className="text-xs font-medium mt-0.5">{label}</div>
-      <div className="text-xs opacity-70 mt-0.5 hidden sm:block">{sub}</div>
+    <div className={wide ? 'col-span-2 sm:col-span-2' : ''}>
+      <p className="text-xs text-slate-400 uppercase tracking-wide mb-0.5">{label}</p>
+      <p className="text-sm font-medium text-slate-800">{value}</p>
+    </div>
+  );
+}
+
+function Metric({ label, value, sub, alert, positive }: { label: string; value: string; sub: string; alert?: boolean; positive?: boolean }) {
+  return (
+    <div className="px-5 py-4">
+      <p className="text-xs text-slate-400 uppercase tracking-wide mb-1">{label}</p>
+      <p className={`text-2xl font-bold tabular-nums ${alert ? 'text-red-600' : positive ? 'text-green-700' : 'text-slate-800'}`}>{value}</p>
+      <p className="text-xs text-slate-400 mt-0.5">{sub}</p>
     </div>
   );
 }
@@ -185,39 +241,46 @@ function StatCard({ label, value, sub, color, icon }: { label: string; value: st
 
 function BoletimTab({ enrollments }: { enrollments: Enrollment[] }) {
   return (
-    <div className="card">
-      <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-4">Boletim Acadêmico</h2>
+    <div className="bg-white border border-slate-200 rounded-lg">
+      <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
+          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Boletim Acadêmico</h2>
+        </div>
+        <span className="text-xs text-slate-400">{enrollments.length} disciplina(s)</span>
+      </div>
+
       {enrollments.length === 0 ? (
-        <p className="text-slate-400 text-sm text-center py-8">Nenhuma disciplina matriculada.</p>
+        <p className="text-slate-400 text-sm text-center py-10">Nenhuma disciplina matriculada no período.</p>
       ) : (
         <>
-          {/* Mobile cards */}
-          <div className="block sm:hidden space-y-3">
+          {/* Mobile */}
+          <div className="block sm:hidden divide-y divide-slate-100">
             {enrollments.map((e) => {
               const media = calcMedia(e.n1, e.n2, e.n3);
-              const allN = [e.n1, e.n2, e.n3].filter((v) => v !== null).length === 3;
+              const allN = [e.n1, e.n2, e.n3].every((v) => v !== null);
               const status = calcStatus(e);
               return (
-                <div key={e.enrollment_id} className="border border-slate-200 rounded-xl p-4 bg-white">
+                <div key={e.enrollment_id} className="px-4 py-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <p className="font-semibold text-slate-800 text-sm">{e.name}</p>
-                      <p className="text-xs text-slate-400 font-mono">{e.code}</p>
+                      <p className="text-sm font-medium text-slate-800">{e.name}</p>
+                      <p className="text-xs text-slate-400 font-mono mt-0.5">{e.code}</p>
                     </div>
                     <span className={status.cls}>{status.label}</span>
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {([['N1', e.n1], ['N2', e.n2], ['N3', e.n3]] as [string, number | null][]).map(([l, v]) => (
-                      <div key={l} className="grade-cell">
-                        <div className="grade-cell-label">{l}</div>
-                        <div className="grade-cell-value">{fmtGrade(v)}</div>
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    {(['N1', 'N2', 'N3'] as const).map((l, i) => (
+                      <div key={l} className="bg-slate-50 rounded py-2">
+                        <p className="text-xs text-slate-400">{l}</p>
+                        <p className="text-sm font-semibold text-slate-700 mt-0.5">{fmtGrade([e.n1, e.n2, e.n3][i])}</p>
                       </div>
                     ))}
-                    <div className="grade-cell">
-                      <div className="grade-cell-label">Média</div>
-                      <div className={`grade-cell-value ${allN && media !== null ? (media >= 5 ? 'text-green-700' : 'text-red-600') : 'text-slate-400'}`}>
+                    <div className="bg-slate-50 rounded py-2">
+                      <p className="text-xs text-slate-400">Média</p>
+                      <p className={`text-sm font-bold mt-0.5 ${allN && media !== null ? (media >= 5 ? 'text-green-700' : 'text-red-600') : 'text-slate-300'}`}>
                         {allN && media !== null ? media.toFixed(1) : '—'}
-                      </div>
+                      </p>
                     </div>
                   </div>
                   {e.final_exam !== null && (
@@ -228,50 +291,49 @@ function BoletimTab({ enrollments }: { enrollments: Enrollment[] }) {
             })}
           </div>
 
-          {/* Desktop table */}
-          <div className="hidden sm:block table-wrap">
-            <div className="table-inner">
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th className="table-th">Disciplina</th>
-                    <th className="table-th text-center">N1</th>
-                    <th className="table-th text-center">N2</th>
-                    <th className="table-th text-center">N3</th>
-                    <th className="table-th text-center">Média</th>
-                    <th className="table-th text-center">Exame Final</th>
-                    <th className="table-th text-center">Situação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {enrollments.map((e) => {
-                    const media = calcMedia(e.n1, e.n2, e.n3);
-                    const allN = [e.n1, e.n2, e.n3].filter((v) => v !== null).length === 3;
-                    const status = calcStatus(e);
-                    return (
-                      <tr key={e.enrollment_id} className="hover:bg-slate-50">
-                        <td className="table-td">
-                          <div className="font-medium">{e.name}</div>
-                          <div className="text-xs text-slate-400 font-mono">{e.code}</div>
-                        </td>
-                        <td className="table-td text-center">{fmtGrade(e.n1)}</td>
-                        <td className="table-td text-center">{fmtGrade(e.n2)}</td>
-                        <td className="table-td text-center">{fmtGrade(e.n3)}</td>
-                        <td className="table-td text-center">
-                          <span className={`font-semibold ${allN && media !== null ? (media >= 5 ? 'text-green-700' : media >= 3 ? 'text-orange-600' : 'text-red-600') : 'text-slate-400'}`}>
-                            {allN && media !== null ? media.toFixed(1) : '—'}
-                          </span>
-                        </td>
-                        <td className="table-td text-center">{fmtGrade(e.final_exam)}</td>
-                        <td className="table-td text-center"><span className={status.cls}>{status.label}</span></td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+          {/* Desktop */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full min-w-[620px]">
+              <thead>
+                <tr className="bg-slate-50 text-left border-b border-slate-100">
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Código</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Disciplina</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-16">N1</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-16">N2</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-16">N3</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-20">Média</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-24">Ex. Final</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-28">Situação</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {enrollments.map((e) => {
+                  const media = calcMedia(e.n1, e.n2, e.n3);
+                  const allN = [e.n1, e.n2, e.n3].every((v) => v !== null);
+                  const status = calcStatus(e);
+                  return (
+                    <tr key={e.enrollment_id} className="hover:bg-slate-50/60">
+                      <td className="px-4 py-3 text-xs font-mono text-slate-400">{e.code}</td>
+                      <td className="px-4 py-3 text-sm text-slate-800">{e.name}</td>
+                      <td className="px-4 py-3 text-sm text-center text-slate-600">{fmtGrade(e.n1)}</td>
+                      <td className="px-4 py-3 text-sm text-center text-slate-600">{fmtGrade(e.n2)}</td>
+                      <td className="px-4 py-3 text-sm text-center text-slate-600">{fmtGrade(e.n3)}</td>
+                      <td className="px-4 py-3 text-sm text-center font-bold">
+                        <span className={allN && media !== null ? (media >= 5 ? 'text-green-700' : media >= 3 ? 'text-amber-600' : 'text-red-600') : 'text-slate-300'}>
+                          {allN && media !== null ? media.toFixed(1) : '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-center text-slate-600">{fmtGrade(e.final_exam)}</td>
+                      <td className="px-4 py-3 text-center"><span className={status.cls}>{status.label}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-          <p className="text-xs text-slate-400 mt-3">Aprovado: ≥ 5.0 · Em Exame: 3.0–4.9 · Rep. Nota: &lt; 3.0</p>
+          <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50 rounded-b-lg">
+            <p className="text-xs text-slate-400">Aprovado: média ≥ 5,0 &nbsp;·&nbsp; Em Exame: 3,0 a 4,9 &nbsp;·&nbsp; Reprovado por Nota: média &lt; 3,0 ou pós-exame &lt; 5,0</p>
+          </div>
         </>
       )}
     </div>
@@ -282,49 +344,56 @@ function BoletimTab({ enrollments }: { enrollments: Enrollment[] }) {
 
 function FrequenciaTab({ enrollments }: { enrollments: Enrollment[] }) {
   return (
-    <div className="card">
-      <h2 className="text-base sm:text-lg font-semibold text-slate-800 mb-4">Frequência Acadêmica</h2>
+    <div className="bg-white border border-slate-200 rounded-lg">
+      <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
+          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Controle de Frequência</h2>
+        </div>
+        <span className="text-xs text-slate-400">Mínimo obrigatório: 75%</span>
+      </div>
+
       {enrollments.length === 0 ? (
-        <p className="text-slate-400 text-sm text-center py-8">Nenhuma disciplina matriculada.</p>
+        <p className="text-slate-400 text-sm text-center py-10">Nenhuma disciplina matriculada no período.</p>
       ) : (
         <>
-          {/* Mobile cards */}
-          <div className="block sm:hidden space-y-3">
+          {/* Mobile */}
+          <div className="block sm:hidden divide-y divide-slate-100">
             {enrollments.map((e) => {
               const maxAbs = Math.floor(e.workload * 0.25);
               const freqNum = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
               const repFalta = e.total_classes > 0 && e.absences > maxAbs;
               const atRisk = !repFalta && freqNum !== null && freqNum < 80;
               return (
-                <div key={e.enrollment_id} className="border border-slate-200 rounded-xl p-4 bg-white">
+                <div key={e.enrollment_id} className="px-4 py-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <p className="font-semibold text-slate-800 text-sm">{e.name}</p>
-                      <p className="text-xs text-slate-400 font-mono">{e.code} · {e.workload}h</p>
+                      <p className="text-sm font-medium text-slate-800">{e.name}</p>
+                      <p className="text-xs text-slate-400 font-mono mt-0.5">{e.code} · {e.workload}h</p>
                     </div>
                     {repFalta ? <span className="badge-reprovado">Rep. Falta</span>
-                      : atRisk ? <span className="badge-risco">Risco</span>
+                      : atRisk   ? <span className="badge-risco">Em Risco</span>
                       : e.total_classes === 0 ? <span className="badge-cursando">Aguardando</span>
                       : <span className="badge-aprovado">Regular</span>}
                   </div>
-                  <div className="grid grid-cols-3 gap-2 mb-3">
-                    {[['Aulas', e.total_classes || 0], ['Faltas', e.absences || 0], ['Máx. Falta', maxAbs]].map(([l, v]) => (
-                      <div key={l as string} className="grade-cell">
-                        <div className="grade-cell-label">{l}</div>
-                        <div className={`grade-cell-value ${l === 'Faltas' && repFalta ? 'text-red-600' : ''}`}>{v}</div>
+                  <div className="grid grid-cols-3 gap-2 text-center mb-3">
+                    {[['Aulas Dadas', e.total_classes || 0], ['Faltas', e.absences || 0], ['Máx. Faltas', maxAbs]].map(([l, v]) => (
+                      <div key={String(l)} className="bg-slate-50 rounded py-2">
+                        <p className="text-xs text-slate-400">{l}</p>
+                        <p className={`text-sm font-semibold mt-0.5 ${l === 'Faltas' && repFalta ? 'text-red-600' : 'text-slate-700'}`}>{v}</p>
                       </div>
                     ))}
                   </div>
                   {freqNum !== null && (
                     <div>
                       <div className="flex justify-between text-xs text-slate-500 mb-1">
-                        <span>Frequência</span>
-                        <span className={`font-semibold ${freqNum >= 75 ? 'text-green-700' : freqNum >= 60 ? 'text-orange-600' : 'text-red-600'}`}>
+                        <span>Frequência acumulada</span>
+                        <span className={`font-semibold ${freqNum >= 75 ? 'text-green-700' : freqNum >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
                           {freqNum.toFixed(1)}%
                         </span>
                       </div>
-                      <div className="w-full bg-slate-200 rounded-full h-2">
-                        <div className={`h-2 rounded-full ${freqNum >= 75 ? 'bg-green-500' : freqNum >= 60 ? 'bg-orange-500' : 'bg-red-500'}`}
+                      <div className="w-full bg-slate-200 rounded-full h-1.5">
+                        <div className={`h-1.5 rounded-full ${freqNum >= 75 ? 'bg-green-500' : freqNum >= 60 ? 'bg-amber-500' : 'bg-red-500'}`}
                           style={{ width: `${Math.min(freqNum, 100)}%` }} />
                       </div>
                     </div>
@@ -334,66 +403,67 @@ function FrequenciaTab({ enrollments }: { enrollments: Enrollment[] }) {
             })}
           </div>
 
-          {/* Desktop table */}
-          <div className="hidden sm:block table-wrap">
-            <div className="table-inner">
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th className="table-th">Disciplina</th>
-                    <th className="table-th text-center">C.H.</th>
-                    <th className="table-th text-center">Aulas</th>
-                    <th className="table-th text-center">Faltas</th>
-                    <th className="table-th text-center">Máx.</th>
-                    <th className="table-th text-center">Frequência</th>
-                    <th className="table-th text-center">Situação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {enrollments.map((e) => {
-                    const maxAbs = Math.floor(e.workload * 0.25);
-                    const freqNum = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
-                    const repFalta = e.total_classes > 0 && e.absences > maxAbs;
-                    const atRisk = !repFalta && freqNum !== null && freqNum < 80;
-                    return (
-                      <tr key={e.enrollment_id} className="hover:bg-slate-50">
-                        <td className="table-td">
-                          <div className="font-medium">{e.name}</div>
-                          <div className="text-xs text-slate-400 font-mono">{e.code}</div>
-                        </td>
-                        <td className="table-td text-center text-slate-500">{e.workload}h</td>
-                        <td className="table-td text-center">{e.total_classes || 0}</td>
-                        <td className="table-td text-center">
-                          <span className={repFalta ? 'text-red-600 font-bold' : atRisk ? 'text-orange-600 font-semibold' : ''}>{e.absences || 0}</span>
-                        </td>
-                        <td className="table-td text-center text-slate-500">{maxAbs}</td>
-                        <td className="table-td text-center">
-                          {freqNum !== null ? (
-                            <div className="flex items-center gap-2 justify-center">
-                              <div className="w-16 bg-slate-200 rounded-full h-1.5">
-                                <div className={`h-1.5 rounded-full ${freqNum >= 75 ? 'bg-green-500' : freqNum >= 60 ? 'bg-orange-500' : 'bg-red-500'}`}
-                                  style={{ width: `${Math.min(freqNum, 100)}%` }} />
-                              </div>
-                              <span className={`text-sm font-medium ${freqNum >= 75 ? 'text-green-700' : freqNum >= 60 ? 'text-orange-600' : 'text-red-600'}`}>
-                                {freqNum.toFixed(1)}%
-                              </span>
+          {/* Desktop */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full min-w-[640px]">
+              <thead>
+                <tr className="bg-slate-50 text-left border-b border-slate-100">
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Código</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Disciplina</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-16">C.H.</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-20">Aulas</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-16">Faltas</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-16">Máx.</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-32">Frequência</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-28">Situação</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {enrollments.map((e) => {
+                  const maxAbs = Math.floor(e.workload * 0.25);
+                  const freqNum = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
+                  const repFalta = e.total_classes > 0 && e.absences > maxAbs;
+                  const atRisk = !repFalta && freqNum !== null && freqNum < 80;
+                  return (
+                    <tr key={e.enrollment_id} className="hover:bg-slate-50/60">
+                      <td className="px-4 py-3 text-xs font-mono text-slate-400">{e.code}</td>
+                      <td className="px-4 py-3 text-sm text-slate-800">{e.name}</td>
+                      <td className="px-4 py-3 text-sm text-center text-slate-500">{e.workload}h</td>
+                      <td className="px-4 py-3 text-sm text-center text-slate-600">{e.total_classes || 0}</td>
+                      <td className="px-4 py-3 text-sm text-center font-semibold">
+                        <span className={repFalta ? 'text-red-600' : atRisk ? 'text-amber-600' : 'text-slate-600'}>
+                          {e.absences || 0}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-center text-slate-400">{maxAbs}</td>
+                      <td className="px-4 py-3">
+                        {freqNum !== null ? (
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 bg-slate-200 rounded-full h-1.5">
+                              <div className={`h-1.5 rounded-full ${freqNum >= 75 ? 'bg-green-500' : freqNum >= 60 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                style={{ width: `${Math.min(freqNum, 100)}%` }} />
                             </div>
-                          ) : <span className="text-slate-400">—</span>}
-                        </td>
-                        <td className="table-td text-center">
-                          {repFalta ? <span className="badge-reprovado">Rep. Falta</span>
-                            : atRisk ? <span className="badge-risco">Risco</span>
-                            : e.total_classes === 0 ? <span className="badge-cursando">Aguardando</span>
-                            : <span className="badge-aprovado">Regular</span>}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                            <span className={`text-xs font-semibold w-10 text-right ${freqNum >= 75 ? 'text-green-700' : freqNum >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
+                              {freqNum.toFixed(1)}%
+                            </span>
+                          </div>
+                        ) : <span className="text-slate-300 text-sm block text-center">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {repFalta ? <span className="badge-reprovado">Rep. Falta</span>
+                          : atRisk   ? <span className="badge-risco">Em Risco</span>
+                          : e.total_classes === 0 ? <span className="badge-cursando">Aguardando</span>
+                          : <span className="badge-aprovado">Regular</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-          <p className="text-xs text-slate-400 mt-3">Mínimo obrigatório: 75% de frequência · Máximo: 25% de faltas</p>
+          <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50 rounded-b-lg">
+            <p className="text-xs text-slate-400">Reprovação por falta quando ausências ultrapassam 25% da carga horária total da disciplina.</p>
+          </div>
         </>
       )}
     </div>
@@ -402,16 +472,10 @@ function FrequenciaTab({ enrollments }: { enrollments: Enrollment[] }) {
 
 // ── PERFIL ────────────────────────────────────────────────────────────────────
 
-function Avatar({ photo, name, size = 'lg' }: { photo?: string | null; name: string; size?: 'sm' | 'md' | 'lg' }) {
-  const sizes = { sm: 'w-9 h-9 text-sm', md: 'w-12 h-12 text-base', lg: 'w-24 h-24 text-3xl' };
-  if (photo) {
-    return (
-      <img src={photo} alt={name}
-        className={`${sizes[size]} rounded-full object-cover border-2 border-white shadow-md flex-shrink-0`} />
-    );
-  }
+function Avatar({ photo, name }: { photo?: string | null; name: string }) {
+  if (photo) return <img src={photo} alt={name} className="w-20 h-20 rounded-full object-cover border-2 border-slate-200 flex-shrink-0" />;
   return (
-    <div className={`${sizes[size]} rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold flex-shrink-0 shadow-md`}>
+    <div className="w-20 h-20 rounded-full bg-[#F26522] flex items-center justify-center text-white text-3xl font-bold flex-shrink-0">
       {name.charAt(0).toUpperCase()}
     </div>
   );
@@ -446,7 +510,7 @@ function PerfilTab({ profile, onPhotoUpdate }: { profile: User | null; onPhotoUp
   const [error, setError] = useState('');
 
   if (!profile) return null;
-  const p = profile as User & { matricula?: string; semester?: number; cpf?: string; phone?: string; created_at?: string };
+  const p = profile as User & { matricula?: string; semester?: number; cpf?: string; phone?: string };
 
   function fmtCPF(v?: string) {
     if (!v) return 'não informado';
@@ -457,6 +521,15 @@ function PerfilTab({ profile, onPhotoUpdate }: { profile: User | null; onPhotoUp
     const d = v.replace(/\D/g, '');
     if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
     return v;
+  }
+  function fmtIngresso() {
+    if (!p.semester) return '—';
+    const now = new Date();
+    const cur = now.getFullYear() * 2 + (now.getMonth() < 6 ? 0 : 1);
+    const ing = cur - (p.semester - 1);
+    const y = Math.floor(ing / 2);
+    const s = (ing % 2) + 1;
+    return `${String(s).padStart(2, '0')}/${y}`;
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -477,64 +550,77 @@ function PerfilTab({ profile, onPhotoUpdate }: { profile: User | null; onPhotoUp
     }
   }
 
-  const items = [
-    ['Curso', 'Medicina (Bacharelado)'],
-    ['Turno', 'Integral'],
-    ['Ingresso', p.semester ? (() => { const now = new Date(); const cur = now.getFullYear() * 2 + (now.getMonth() < 6 ? 0 : 1); const ing = cur - (p.semester - 1); const y = Math.floor(ing / 2); const s = (ing % 2) + 1; return `${String(s).padStart(2, '0')}/${y}`; })() : '—'],
-    ['Semestre', p.semester ? `${p.semester}º Semestre` : '—'],
-    ['Matrícula', p.matricula ?? '—'],
-    ['CPF', fmtCPF(p.cpf)],
-    ['Telefone', fmtPhone(p.phone)],
+  const rows = [
+    ['Curso',      'Medicina (Bacharelado)'],
+    ['Habilitação','Bacharelado'],
+    ['Turno',      'Integral'],
+    ['Ingresso',   fmtIngresso()],
+    ['Semestre atual', p.semester ? `${p.semester}º Semestre` : '—'],
+    ['Matrícula',  p.matricula ?? '—'],
+    ['CPF',        fmtCPF(p.cpf)],
+    ['Telefone',   fmtPhone(p.phone)],
+    ['Situação',   'Ativo(a)'],
+    ['Regime',     'Semestral Presencial'],
   ];
 
   return (
-    <div className="card max-w-xl">
-      {/* Foto + identidade */}
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-6 pb-6 border-b border-slate-100">
-        <div className="relative flex-shrink-0">
-          <Avatar photo={profile.photo} name={profile.name} size="lg" />
-          <button
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center text-white shadow-lg transition-colors disabled:opacity-50"
-            title="Alterar foto"
-          >
-            {uploading ? (
-              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            )}
-          </button>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+    <div className="space-y-5 max-w-2xl">
+      {/* Identificação */}
+      <div className="bg-white border border-slate-200 rounded-lg">
+        <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
+          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Identificação</h2>
         </div>
-
-        <div className="text-center sm:text-left min-w-0">
-          <h2 className="text-lg sm:text-xl font-bold text-slate-800">{profile.name}</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Aluno de Medicina · FAMED</p>
-          <span className="inline-block mt-2 text-xs font-mono bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">{p.matricula}</span>
-          {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
-          <p className="text-xs text-slate-400 mt-2">Clique na câmera para alterar a foto</p>
-        </div>
-      </div>
-
-      {/* Dados */}
-      <div className="space-y-1">
-        {items.map(([label, value]) => (
-          <div key={label} className="flex justify-between items-start gap-2 py-2.5 border-b border-slate-50 last:border-0">
-            <span className="text-sm text-slate-500 flex-shrink-0">{label}</span>
-            <span className="text-sm font-medium text-slate-800 text-right break-all">{value}</span>
+        <div className="px-4 py-5 flex flex-col sm:flex-row items-center sm:items-start gap-5">
+          <div className="relative flex-shrink-0">
+            <Avatar photo={profile.photo} name={profile.name} />
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="absolute bottom-0 right-0 w-7 h-7 bg-[#F26522] hover:bg-[#E05A15] rounded-full flex items-center justify-center text-white shadow transition-colors disabled:opacity-50"
+            >
+              {uploading
+                ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+              }
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
           </div>
-        ))}
+          <div>
+            <p className="text-xs text-slate-400 uppercase tracking-wide">Nome completo</p>
+            <h3 className="text-lg font-semibold text-slate-800 mt-0.5">{profile.name}</h3>
+            <p className="text-sm text-slate-500 mt-1">Discente · Medicina · UFSCar</p>
+            <p className="text-xs font-mono text-slate-400 mt-1">{p.matricula}</p>
+            {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-5 p-3 sm:p-4 bg-blue-50 rounded-xl">
-        <p className="text-xs text-blue-700">
-          <strong>Precisa atualizar seus dados?</strong> Entre em contato com a Secretaria Acadêmica pelo e-mail{' '}
-          <span className="font-mono">secretaria@famed.edu.br</span>.
+      {/* Dados acadêmicos */}
+      <div className="bg-white border border-slate-200 rounded-lg">
+        <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
+          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Dados Acadêmicos e Pessoais</h2>
+        </div>
+        <table className="w-full">
+          <tbody className="divide-y divide-slate-100">
+            {rows.map(([label, value]) => (
+              <tr key={label} className="hover:bg-slate-50/50">
+                <td className="px-4 py-2.5 text-xs text-slate-400 uppercase tracking-wide w-40">{label}</td>
+                <td className="px-4 py-2.5 text-sm text-slate-800 font-medium">{value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="border-l-4 border-slate-200 pl-4 py-1">
+        <p className="text-xs text-slate-500">
+          Para atualização de dados cadastrais, dirija-se à Secretaria Acadêmica ou envie solicitação para{' '}
+          <span className="font-mono text-slate-600">secretaria@ufscar.br</span>.
         </p>
       </div>
     </div>

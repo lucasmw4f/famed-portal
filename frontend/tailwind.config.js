@@ -4,14 +4,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50:  '#eff6ff',
-          100: '#dbeafe',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e3a5f',
-          900: '#1e3a5f',
+        ufscar: {
+          orange:       '#F26522',
+          'orange-dark':'#E05A15',
+          navy:         '#071D41',
+          'navy-light': '#0D2B5E',
+          50:           '#FEF3EC',
+          100:          '#FDE0C8',
         },
       },
     },

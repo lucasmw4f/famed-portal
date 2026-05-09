@@ -18,8 +18,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const t = localStorage.getItem('famed_token');
-    const u = localStorage.getItem('famed_user');
+    const t = localStorage.getItem('ufscar_token');
+    const u = localStorage.getItem('ufscar_user');
     if (t && u) {
       setToken(t);
       setUser(JSON.parse(u));
@@ -29,15 +29,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function login(email: string, password: string) {
     const { data } = await api.post('/auth/login', { email, password });
-    localStorage.setItem('famed_token', data.token);
-    localStorage.setItem('famed_user', JSON.stringify(data.user));
+    localStorage.setItem('ufscar_token', data.token);
+    localStorage.setItem('ufscar_user', JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
   }
 
   function logout() {
-    localStorage.removeItem('famed_token');
-    localStorage.removeItem('famed_user');
+    localStorage.removeItem('ufscar_token');
+    localStorage.removeItem('ufscar_user');
     setToken(null);
     setUser(null);
   }

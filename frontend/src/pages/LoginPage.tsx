@@ -30,68 +30,106 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Logo / Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-4">
-            <svg className="w-9 h-9 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
+    <div className="min-h-screen flex flex-col bg-slate-100">
+
+      {/* Barra gov.br */}
+      <div className="bg-[#071D41] py-2 px-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <span className="text-white font-bold text-sm tracking-wide">gov.br</span>
+          <div className="hidden sm:flex items-center gap-6 text-xs text-white/70">
+            <span>ACESSO À INFORMAÇÃO</span>
+            <span>PARTICIPE</span>
+            <span>LEGISLAÇÃO</span>
+            <span>ÓRGÃOS DO GOVERNO</span>
           </div>
-          <h1 className="text-3xl font-bold text-white">FAMED</h1>
-          <p className="text-blue-200 text-sm mt-1">Faculdade de Medicina · Portal Acadêmico</p>
         </div>
+      </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-xl font-semibold text-slate-800 mb-6">Acesso ao Sistema</h2>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Header laranja UFSCar */}
+      <div className="bg-[#F26522] px-4 py-6">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">E-mail institucional</label>
-              <input
-                type="email"
-                className="input"
-                placeholder="usuario@famed.edu.br"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoFocus
-              />
+              <p className="text-white font-black text-3xl leading-none tracking-tight">UFSCar</p>
+              <p className="text-white/90 text-xs mt-0.5 leading-tight">Universidade Federal<br />de São Carlos</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Senha</label>
-              <input
-                type="password"
-                className="input"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <button type="submit" className="btn-primary w-full mt-2 py-2.5" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar'}
-            </button>
-          </form>
+          </div>
+          <div className="hidden md:flex items-center gap-6 text-sm text-white/90">
+            <span>A UFSCar</span>
+            <span>Gestão</span>
+            <span>Processos Seletivos</span>
+            <span>Contatos</span>
+          </div>
+        </div>
+      </div>
 
-          <p className="text-xs text-slate-400 text-center mt-6">
-            Em caso de problemas, entre em contato com a secretaria acadêmica.
+      {/* Barra de perfis */}
+      <div className="bg-[#071D41] px-4 py-2.5">
+        <div className="max-w-6xl mx-auto flex items-center gap-8">
+          <span className="text-white text-sm font-semibold border-b-2 border-[#F26522] pb-1">Estudante</span>
+          <span className="text-white/60 text-sm hidden sm:inline">Docente/Técnico-Administrativo</span>
+          <span className="text-white/60 text-sm hidden md:inline">Pesquisador</span>
+          <span className="text-white/60 text-sm hidden md:inline">Visitante</span>
+        </div>
+      </div>
+
+      {/* Conteúdo central */}
+      <main className="flex-1 flex items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            {/* Topo do card */}
+            <div className="bg-[#F26522] px-6 py-4">
+              <h2 className="text-white font-bold text-base tracking-wide">SISTEMA ACADÊMICO</h2>
+              <p className="text-white/80 text-xs mt-0.5">Portal do Aluno · Curso de Medicina</p>
+            </div>
+
+            <div className="px-6 py-6">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">E-mail institucional</label>
+                  <input
+                    type="email"
+                    className="input"
+                    placeholder="usuario@ufscar.br"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Senha</label>
+                  <input
+                    type="password"
+                    className="input"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <button type="submit" className="btn-primary w-full py-2.5" disabled={loading}>
+                  {loading ? 'Entrando...' : 'Entrar'}
+                </button>
+              </form>
+
+              <p className="text-xs text-slate-400 text-center mt-5">
+                Em caso de problemas, entre em contato com a Secretaria Acadêmica.
+              </p>
+            </div>
+          </div>
+
+          <p className="text-center text-slate-400 text-xs mt-5">
+            © {new Date().getFullYear()} UFSCar — Universidade Federal de São Carlos
           </p>
         </div>
-
-        <p className="text-center text-blue-300 text-xs mt-6">
-          © {new Date().getFullYear()} FAMED – Todos os direitos reservados
-        </p>
-      </div>
+      </main>
     </div>
   );
 }
