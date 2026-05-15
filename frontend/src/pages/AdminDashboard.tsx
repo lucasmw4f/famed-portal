@@ -11,9 +11,9 @@ const DARK_BG = '#0D0D0D';
 const CARD_BG = '#161616';
 const BORDER = 'rgba(255,255,255,0.07)';
 
-function DarkCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+function DarkCard({ children, className = '', style = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={`rounded-xl ${className}`} style={{ background: CARD_BG, border: `1px solid ${BORDER}` }}>
+    <div className={`rounded-xl ${className}`} style={{ background: CARD_BG, border: `1px solid ${BORDER}`, ...style }}>
       {children}
     </div>
   );
