@@ -85,7 +85,7 @@ export default function StudentDashboard() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: 'Inter, Arial, sans-serif' }}>
+    <div style={{ minHeight: '100dvh', background: BG, fontFamily: 'Inter, Arial, sans-serif' }}>
 
       {/* ── Header ── */}
       <header style={{ background: '#0D0D0D', borderBottom: `1px solid ${BORD}`, position: 'sticky', top: 0, zIndex: 30 }}>
@@ -167,6 +167,10 @@ export default function StudentDashboard() {
         }
         @media(min-width:769px){
           .dash-menu-mobile{ display:none !important; }
+          .metrics-grid{ grid-template-columns: repeat(5,1fr) !important; gap: 12px !important; }
+        }
+        @media(min-width:480px) and (max-width:768px){
+          .metrics-grid{ grid-template-columns: repeat(3,1fr) !important; }
         }
       `}</style>
     </div>
@@ -211,7 +215,7 @@ function InicioTab({ enrollments, profile }: { enrollments: Enrollment[]; profil
       </Card>
 
       {/* Indicadores */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+      <div className="metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
         {[
           { label: 'Disciplinas',  value: enrollments.length,  sub: 'matriculadas',          color: 'rgba(255,255,255,0.85)', alert: false },
           { label: 'Média Geral',  value: mediaGeral !== null ? mediaGeral.toFixed(2) : '—', sub: mediaGeral === null ? 'sem notas' : mediaGeral >= 6 ? 'regular' : 'abaixo do mínimo', color: mediaGeral !== null && mediaGeral < 6 ? '#f87171' : 'rgba(255,255,255,0.85)', alert: false },
