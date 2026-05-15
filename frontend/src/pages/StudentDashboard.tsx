@@ -7,494 +7,494 @@ import DeclaracaoMatricula from '../components/DeclaracaoMatricula';
 
 type Tab = 'inicio' | 'boletim' | 'frequencia' | 'perfil' | 'declaracao';
 
-export default function StudentDashboard() {
-  const { user, logout } = useAuth();
-  const [tab, setTab] = useState<Tab>('inicio');
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [profile, setProfile] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+const RED   = '#F5004A';
+const BG    = '#0A0A0A';
+const CARD  = '#111111';
+const BORD  = 'rgba(255,255,255,0.07)';
 
-  useEffect(() => {
-    Promise.all([api.get('/student/enrollments'), api.get('/student/profile')]).then(
-      ([eRes, pRes]) => { setEnrollments(eRes.data); setProfile(pRes.data); setLoading(false); }
-    );
-  }, []);
+/* ── utilidades ─────────────────────────────────────────────────────────── */
 
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <div className="w-7 h-7 border-2 border-[#F26522] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-slate-400">Carregando dados acadêmicos...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'inicio',     label: 'Início' },
-    { key: 'boletim',    label: 'Boletim' },
-    { key: 'frequencia', label: 'Frequência' },
-    { key: 'perfil',     label: 'Perfil' },
-    { key: 'declaracao', label: 'Declaração' },
-  ];
-
+function Card({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div className="min-h-screen bg-slate-50">
-
-      {/* Barra gov.br */}
-      <div className="bg-[#071D41]">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-9">
-          <span className="text-white font-bold text-sm tracking-wide">gov.br</span>
-          <div className="hidden sm:flex items-center gap-5 text-xs text-white/60">
-            <span>ACESSO À INFORMAÇÃO</span>
-            <span>PARTICIPE</span>
-            <span>LEGISLAÇÃO</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Header laranja UFSCar */}
-      <div className="bg-[#F26522]">
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between py-4">
-          <div>
-            <p className="text-white font-black text-2xl sm:text-3xl leading-none tracking-tight">UFSCar</p>
-            <p className="text-white/90 text-xs mt-0.5">Universidade Federal de São Carlos</p>
-          </div>
-          <div className="flex items-center gap-3 sm:gap-5">
-            <span className="text-white/80 text-sm hidden md:block truncate max-w-[200px]">{user?.name}</span>
-            <button onClick={logout} className="text-xs border border-white/50 hover:bg-white/20 text-white px-3 py-1.5 rounded transition-colors">
-              Sair
-            </button>
-          </div>
-        </div>
-        <div className="max-w-6xl mx-auto px-4 pb-0 hidden md:flex items-center gap-7 text-sm text-white/80 border-t border-white/20">
-          <span className="py-2 cursor-default">A UFSCar</span>
-          <span className="py-2 cursor-default">Gestão</span>
-          <span className="py-2 cursor-default">Processos Seletivos</span>
-          <span className="py-2 cursor-default">Acesso à Informação</span>
-          <span className="py-2 cursor-default">Contatos</span>
-        </div>
-      </div>
-
-      {/* Barra de abas */}
-      <div className="bg-[#071D41]">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-            {tabs.map((t) => (
-              <button key={t.key} onClick={() => setTab(t.key)}
-                className={`px-5 py-3 text-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 ${
-                  tab === t.key ? 'text-white border-b-2 border-[#F26522]' : 'text-white/55 hover:text-white/85'
-                }`}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <main className="max-w-6xl mx-auto px-4 py-6">
-        {tab === 'inicio'     && <InicioTab enrollments={enrollments} profile={profile} />}
-        {tab === 'boletim'    && <BoletimTab enrollments={enrollments} />}
-        {tab === 'frequencia' && <FrequenciaTab enrollments={enrollments} />}
-        {tab === 'perfil'     && <PerfilTab profile={profile} onPhotoUpdate={(photo) => setProfile((p) => p ? { ...p, photo } : p)} />}
-        {tab === 'declaracao' && <div className="bg-white border border-slate-200 rounded-lg p-4 sm:p-6"><DeclaracaoMatricula profile={profile} /></div>}
-      </main>
+    <div style={{ background: CARD, border: `1px solid ${BORD}`, borderRadius: 8, ...style }}>
+      {children}
     </div>
   );
 }
 
-// ── INÍCIO ────────────────────────────────────────────────────────────────────
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
+      {children}
+    </p>
+  );
+}
+
+function Badge({ label }: { label: string }) {
+  const map: Record<string, { bg: string; color: string }> = {
+    'Aprovado':   { bg: 'rgba(34,197,94,0.12)',  color: '#4ade80' },
+    'Rep. Nota':  { bg: 'rgba(245,0,74,0.12)',   color: '#f87171' },
+    'Rep. Falta': { bg: 'rgba(245,0,74,0.12)',   color: '#f87171' },
+    'Prova Sub.': { bg: 'rgba(251,191,36,0.12)', color: '#fbbf24' },
+    'Cursando':   { bg: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' },
+    'Regular':    { bg: 'rgba(34,197,94,0.12)',  color: '#4ade80' },
+    'Em Risco':   { bg: 'rgba(251,191,36,0.12)', color: '#fbbf24' },
+    'Rep. Falta (freq)': { bg: 'rgba(245,0,74,0.12)', color: '#f87171' },
+    'Aguardando': { bg: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)' },
+  };
+  const c = map[label] ?? map['Cursando'];
+  return (
+    <span style={{
+      display: 'inline-block', padding: '2px 10px', borderRadius: 4,
+      fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
+      background: c.bg, color: c.color,
+    }}>{label}</span>
+  );
+}
+
+/* ── dashboard ──────────────────────────────────────────────────────────── */
+
+export default function StudentDashboard() {
+  const { user, logout } = useAuth();
+  const [tab, setTab]             = useState<Tab>('inicio');
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [profile, setProfile]     = useState<User | null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [menuOpen, setMenuOpen]   = useState(false);
+
+  useEffect(() => {
+    Promise.all([api.get('/student/enrollments'), api.get('/student/profile')])
+      .then(([eRes, pRes]) => { setEnrollments(eRes.data); setProfile(pRes.data); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return (
+    <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: BG }}>
+      <div style={{ width: 28, height: 28, border: `2px solid ${RED}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: 'inicio',     label: 'Início' },
+    { key: 'boletim',   label: 'Boletim' },
+    { key: 'frequencia', label: 'Frequência' },
+    { key: 'perfil',    label: 'Perfil' },
+    { key: 'declaracao', label: 'Declaração' },
+  ];
+
+  return (
+    <div style={{ minHeight: '100vh', background: BG, fontFamily: 'Inter, Arial, sans-serif' }}>
+
+      {/* ── Header ── */}
+      <header style={{ background: '#0D0D0D', borderBottom: `1px solid ${BORD}`, position: 'sticky', top: 0, zIndex: 30 }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
+
+          {/* Logo */}
+          <span style={{ color: RED, fontWeight: 900, fontSize: 20, letterSpacing: 3, userSelect: 'none' }}>FIAP</span>
+
+          {/* Nav desktop */}
+          <nav style={{ display: 'flex', gap: 0 }} className="dash-nav-desktop">
+            {tabs.map(t => (
+              <button key={t.key} onClick={() => setTab(t.key)} style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                padding: '0 16px', height: 56, fontSize: 13, fontWeight: 500,
+                color: tab === t.key ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)',
+                borderBottom: tab === t.key ? `2px solid ${RED}` : '2px solid transparent',
+                transition: 'color .15s, border-color .15s',
+                whiteSpace: 'nowrap',
+              }}
+                onMouseEnter={e => { if (tab !== t.key) e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; }}
+                onMouseLeave={e => { if (tab !== t.key) e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; }}
+              >{t.label}</button>
+            ))}
+          </nav>
+
+          {/* Direita */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              className="dash-username">{user?.name}</span>
+            <button onClick={logout} style={{
+              background: 'none', border: `1px solid rgba(255,255,255,0.12)`, borderRadius: 4,
+              color: 'rgba(255,255,255,0.45)', fontSize: 12, padding: '5px 12px', cursor: 'pointer',
+              transition: 'border-color .15s, color .15s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; }}
+            >Sair</button>
+
+            {/* Hamburguer mobile */}
+            <button onClick={() => setMenuOpen(!menuOpen)} className="dash-hamburger" style={{
+              background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+              display: 'none', flexDirection: 'column', gap: 5,
+            }}>
+              {[0,1,2].map(i => <span key={i} style={{ display: 'block', width: 22, height: 2, background: 'rgba(255,255,255,0.5)', borderRadius: 2 }} />)}
+            </button>
+          </div>
+        </div>
+
+        {/* Menu mobile dropdown */}
+        {menuOpen && (
+          <div className="dash-menu-mobile" style={{ borderTop: `1px solid ${BORD}`, background: '#0D0D0D' }}>
+            {tabs.map(t => (
+              <button key={t.key} onClick={() => { setTab(t.key); setMenuOpen(false); }} style={{
+                display: 'block', width: '100%', textAlign: 'left',
+                background: tab === t.key ? 'rgba(245,0,74,0.08)' : 'none',
+                border: 'none', borderLeft: tab === t.key ? `3px solid ${RED}` : '3px solid transparent',
+                color: tab === t.key ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
+                padding: '13px 24px', fontSize: 14, cursor: 'pointer',
+              }}>{t.label}</button>
+            ))}
+          </div>
+        )}
+      </header>
+
+      {/* ── Conteúdo ── */}
+      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 20px' }}>
+        {tab === 'inicio'     && <InicioTab enrollments={enrollments} profile={profile} />}
+        {tab === 'boletim'   && <BoletimTab enrollments={enrollments} />}
+        {tab === 'frequencia' && <FrequenciaTab enrollments={enrollments} />}
+        {tab === 'perfil'    && <PerfilTab profile={profile} onPhotoUpdate={photo => setProfile(p => p ? { ...p, photo } : p)} />}
+        {tab === 'declaracao' && <Card style={{ padding: '24px' }}><DeclaracaoMatricula profile={profile} /></Card>}
+      </main>
+
+      <style>{`
+        @media(max-width:768px){
+          .dash-nav-desktop{ display:none !important; }
+          .dash-hamburger{ display:flex !important; }
+          .dash-username{ display:none !important; }
+        }
+        @media(min-width:769px){
+          .dash-menu-mobile{ display:none !important; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* ── INÍCIO ─────────────────────────────────────────────────────────────── */
 
 function InicioTab({ enrollments, profile }: { enrollments: Enrollment[]; profile: User | null }) {
   const p = profile as User & { matricula?: string; semester?: number };
 
-  const withGrades   = enrollments.filter((e) => e.n1 !== null && e.n2 !== null && e.n3 !== null);
-  const medias       = withGrades.map((e) => calcMedia(e.n1, e.n2, e.n3)).filter((m): m is number => m !== null);
-  const mediaGeral   = medias.length ? medias.reduce((a, b) => a + b, 0) / medias.length : null;
-  const aprovados    = withGrades.filter((e) => { const m = calcMedia(e.n1, e.n2, e.n3); return m !== null && m >= 5; }).length;
-  const emExame      = withGrades.filter((e) => { const m = calcMedia(e.n1, e.n2, e.n3); return m !== null && m >= 3 && m < 5; }).length;
-  const reprovados   = withGrades.filter((e) => calcStatus(e).label.startsWith('Rep')).length;
-  const emRisco      = enrollments.filter((e) => {
+  const withGrades = enrollments.filter(e => e.n1 !== null && e.n2 !== null && e.n3 !== null);
+  const medias     = withGrades.map(e => calcMedia(e.n1, e.n2, e.n3)).filter((m): m is number => m !== null);
+  const mediaGeral = medias.length ? medias.reduce((a, b) => a + b, 0) / medias.length : null;
+  const aprovados  = withGrades.filter(e => { const m = calcMedia(e.n1, e.n2, e.n3); return m !== null && m >= 6; }).length;
+  const emSub      = withGrades.filter(e => { const m = calcMedia(e.n1, e.n2, e.n3); return m !== null && m >= 4 && m < 6; }).length;
+  const reprovados = withGrades.filter(e => calcStatus(e).label.startsWith('Rep')).length;
+  const emRisco    = enrollments.filter(e => {
     const max = Math.floor(e.workload * 0.25);
     return e.total_classes > 0 && e.absences > max * 0.7 && e.absences <= max;
   }).length;
 
   return (
-    <div className="space-y-5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-      {/* Cabeçalho do aluno */}
-      <div className="bg-white border border-slate-200 rounded-lg">
-        <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Dados do Discente</h2>
+      {/* Dados do discente */}
+      <Card style={{ padding: '20px 24px' }}>
+        <SectionTitle>Dados do discente</SectionTitle>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px 32px' }}>
+          {[
+            ['Nome',       profile?.name ?? '—'],
+            ['Matrícula',  p?.matricula ?? '—'],
+            ['Curso',      'ADS — Tecnólogo'],
+            ['Semestre',   p?.semester ? `${p.semester}º Semestre` : '—'],
+          ].map(([l, v]) => (
+            <div key={l}>
+              <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>{l}</p>
+              <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 500 }}>{v}</p>
+            </div>
+          ))}
         </div>
-        <div className="px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-3">
-          <InfoField label="Nome" value={profile?.name ?? '—'} wide />
-          <InfoField label="Matrícula" value={p?.matricula ?? '—'} />
-          <InfoField label="Curso" value="Medicina (Bacharelado)" />
-          <InfoField label="Semestre" value={p?.semester ? `${p.semester}º Semestre` : '—'} />
-        </div>
+      </Card>
+
+      {/* Indicadores */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+        {[
+          { label: 'Disciplinas',  value: enrollments.length,  sub: 'matriculadas',          color: 'rgba(255,255,255,0.85)', alert: false },
+          { label: 'Média Geral',  value: mediaGeral !== null ? mediaGeral.toFixed(2) : '—', sub: mediaGeral === null ? 'sem notas' : mediaGeral >= 6 ? 'regular' : 'abaixo do mínimo', color: mediaGeral !== null && mediaGeral < 6 ? '#f87171' : 'rgba(255,255,255,0.85)', alert: false },
+          { label: 'Aprovações',   value: aprovados,            sub: `de ${withGrades.length} avaliadas`, color: aprovados > 0 ? '#4ade80' : 'rgba(255,255,255,0.85)', alert: false },
+          { label: 'Prova Sub.',   value: emSub,                sub: 'aguardando',            color: emSub > 0 ? '#fbbf24' : 'rgba(255,255,255,0.85)', alert: false },
+          { label: 'Reprovações',  value: reprovados,           sub: 'no período',            color: reprovados > 0 ? '#f87171' : 'rgba(255,255,255,0.85)', alert: false },
+        ].map(m => (
+          <Card key={m.label} style={{ padding: '16px 20px' }}>
+            <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>{m.label}</p>
+            <p style={{ color: m.color, fontSize: 26, fontWeight: 700, lineHeight: 1, marginBottom: 4 }}>{String(m.value)}</p>
+            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>{m.sub}</p>
+          </Card>
+        ))}
       </div>
 
-      {/* Indicadores acadêmicos */}
-      <div className="bg-white border border-slate-200 rounded-lg">
-        <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Indicadores do Período</h2>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-slate-100">
-          <Metric label="Disciplinas" value={String(enrollments.length)} sub="matriculadas" />
-          <Metric label="Média Geral" value={mediaGeral !== null ? mediaGeral.toFixed(2) : '—'}
-            sub={mediaGeral === null ? 'sem notas lançadas' : mediaGeral >= 5 ? 'situação regular' : 'abaixo do mínimo'}
-            alert={mediaGeral !== null && mediaGeral < 5} />
-          <Metric label="Aprovações" value={String(aprovados)} sub={`de ${withGrades.length} avaliadas`} positive={aprovados > 0} />
-          <Metric label="Em Exame" value={String(emExame)} sub="aguardando exame final" alert={emExame > 0} />
-          <Metric label="Reprovações" value={String(reprovados)} sub="no período" alert={reprovados > 0} />
-        </div>
-      </div>
-
-      {/* Alerta de frequência */}
+      {/* Alerta frequência */}
       {emRisco > 0 && (
-        <div className="border-l-4 border-amber-400 bg-amber-50 px-4 py-3 rounded-r-lg">
-          <p className="text-sm font-semibold text-amber-800">Alerta de Frequência</p>
-          <p className="text-sm text-amber-700 mt-0.5">
-            {emRisco} disciplina(s) com frequência próxima ao limite mínimo de 75%. Risco de reprovação por falta.
-          </p>
+        <div style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.2)', borderLeft: '3px solid #fbbf24', borderRadius: 6, padding: '12px 16px' }}>
+          <p style={{ color: '#fbbf24', fontWeight: 600, fontSize: 13, marginBottom: 2 }}>Atenção — Frequência</p>
+          <p style={{ color: 'rgba(251,191,36,0.7)', fontSize: 12 }}>{emRisco} disciplina(s) próximas do limite mínimo de 75%.</p>
         </div>
       )}
 
-      {/* Quadro geral de disciplinas */}
-      <div className="bg-white border border-slate-200 rounded-lg">
-        <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Quadro Geral de Disciplinas</h2>
+      {/* Quadro geral */}
+      <Card>
+        <div style={{ padding: '16px 20px 12px', borderBottom: `1px solid ${BORD}` }}>
+          <SectionTitle>Quadro geral de disciplinas</SectionTitle>
         </div>
-        {enrollments.length === 0 ? (
-          <p className="text-slate-400 text-sm text-center py-8">Nenhuma disciplina matriculada no período.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px]">
-              <thead>
-                <tr className="bg-slate-50 text-left">
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Código</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Disciplina</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Média</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Freq.</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Situação</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {enrollments.map((e) => {
-                  const s = calcStatus(e);
-                  const media = calcMedia(e.n1, e.n2, e.n3);
-                  const allN = [e.n1, e.n2, e.n3].every((v) => v !== null);
-                  const maxAbs = Math.floor(e.workload * 0.25);
-                  const freqPct = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
-                  const freqWarn = freqPct !== null && freqPct < 80;
-                  const repFalta = e.total_classes > 0 && e.absences > maxAbs;
-                  return (
-                    <tr key={e.enrollment_id} className="hover:bg-slate-50/70">
-                      <td className="px-4 py-2.5 text-xs font-mono text-slate-400">{e.code}</td>
-                      <td className="px-4 py-2.5 text-sm text-slate-800">{e.name}</td>
-                      <td className="px-4 py-2.5 text-sm text-center font-semibold">
-                        <span className={allN && media !== null ? (media >= 5 ? 'text-green-700' : media >= 3 ? 'text-amber-600' : 'text-red-600') : 'text-slate-300'}>
-                          {allN && media !== null ? media.toFixed(1) : '—'}
-                        </span>
-                      </td>
-                      <td className={`px-4 py-2.5 text-sm text-center ${repFalta ? 'text-red-600 font-semibold' : freqWarn ? 'text-amber-600 font-semibold' : 'text-slate-600'}`}>
-                        {freqPct !== null ? freqPct.toFixed(0) + '%' : '—'}
-                      </td>
-                      <td className="px-4 py-2.5 text-center"><span className={s.cls}>{s.label}</span></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+        {enrollments.length === 0
+          ? <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13, textAlign: 'center', padding: '32px 0' }}>Nenhuma disciplina matriculada.</p>
+          : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 500 }}>
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${BORD}` }}>
+                    {['Código','Disciplina','Média','Freq.','Situação'].map((h, i) => (
+                      <th key={h} style={{ padding: '10px 16px', textAlign: i >= 2 ? 'center' : 'left', color: 'rgba(255,255,255,0.28)', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {enrollments.map(e => {
+                    const s   = calcStatus(e);
+                    const m   = calcMedia(e.n1, e.n2, e.n3);
+                    const allN = [e.n1,e.n2,e.n3].every(v => v !== null);
+                    const freq = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
+                    const repF = e.total_classes > 0 && e.absences > Math.floor(e.workload * 0.25);
+                    return (
+                      <tr key={e.enrollment_id} style={{ borderBottom: `1px solid ${BORD}` }}
+                        onMouseEnter={el => (el.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+                        onMouseLeave={el => (el.currentTarget.style.background = 'transparent')}>
+                        <td style={{ padding: '11px 16px', fontSize: 11, fontFamily: 'monospace', color: 'rgba(255,255,255,0.25)' }}>{e.code}</td>
+                        <td style={{ padding: '11px 16px', fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{e.name}</td>
+                        <td style={{ padding: '11px 16px', textAlign: 'center', fontSize: 13, fontWeight: 600, color: allN && m !== null ? (m >= 6 ? '#4ade80' : m >= 4 ? '#fbbf24' : '#f87171') : 'rgba(255,255,255,0.2)' }}>{allN && m !== null ? m.toFixed(1) : '—'}</td>
+                        <td style={{ padding: '11px 16px', textAlign: 'center', fontSize: 13, fontWeight: 500, color: repF ? '#f87171' : freq !== null && freq < 80 ? '#fbbf24' : 'rgba(255,255,255,0.45)' }}>{freq !== null ? freq.toFixed(0)+'%' : '—'}</td>
+                        <td style={{ padding: '11px 16px', textAlign: 'center' }}><Badge label={s.label} /></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+      </Card>
     </div>
   );
 }
 
-function InfoField({ label, value, wide }: { label: string; value: string; wide?: boolean }) {
-  return (
-    <div className={wide ? 'col-span-2 sm:col-span-2' : ''}>
-      <p className="text-xs text-slate-400 uppercase tracking-wide mb-0.5">{label}</p>
-      <p className="text-sm font-medium text-slate-800">{value}</p>
-    </div>
-  );
-}
-
-function Metric({ label, value, sub, alert, positive }: { label: string; value: string; sub: string; alert?: boolean; positive?: boolean }) {
-  return (
-    <div className="px-5 py-4">
-      <p className="text-xs text-slate-400 uppercase tracking-wide mb-1">{label}</p>
-      <p className={`text-2xl font-bold tabular-nums ${alert ? 'text-red-600' : positive ? 'text-green-700' : 'text-slate-800'}`}>{value}</p>
-      <p className="text-xs text-slate-400 mt-0.5">{sub}</p>
-    </div>
-  );
-}
-
-// ── BOLETIM ───────────────────────────────────────────────────────────────────
+/* ── BOLETIM ─────────────────────────────────────────────────────────────── */
 
 function BoletimTab({ enrollments }: { enrollments: Enrollment[] }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-lg">
-      <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Boletim Acadêmico</h2>
-        </div>
-        <span className="text-xs text-slate-400">{enrollments.length} disciplina(s)</span>
+    <Card>
+      <div style={{ padding: '16px 20px 12px', borderBottom: `1px solid ${BORD}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <SectionTitle>Boletim acadêmico</SectionTitle>
+        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12 }}>{enrollments.length} disciplina(s)</span>
       </div>
 
-      {enrollments.length === 0 ? (
-        <p className="text-slate-400 text-sm text-center py-10">Nenhuma disciplina matriculada no período.</p>
-      ) : (
-        <>
-          {/* Mobile */}
-          <div className="block sm:hidden divide-y divide-slate-100">
-            {enrollments.map((e) => {
-              const media = calcMedia(e.n1, e.n2, e.n3);
-              const allN = [e.n1, e.n2, e.n3].every((v) => v !== null);
-              const status = calcStatus(e);
-              return (
-                <div key={e.enrollment_id} className="px-4 py-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="text-sm font-medium text-slate-800">{e.name}</p>
-                      <p className="text-xs text-slate-400 font-mono mt-0.5">{e.code}</p>
-                    </div>
-                    <span className={status.cls}>{status.label}</span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2 text-center">
-                    {(['N1', 'N2', 'N3'] as const).map((l, i) => (
-                      <div key={l} className="bg-slate-50 rounded py-2">
-                        <p className="text-xs text-slate-400">{l}</p>
-                        <p className="text-sm font-semibold text-slate-700 mt-0.5">{fmtGrade([e.n1, e.n2, e.n3][i])}</p>
+      {enrollments.length === 0
+        ? <p style={{ color: 'rgba(255,255,255,0.25)', textAlign: 'center', padding: '32px 0', fontSize: 13 }}>Nenhuma disciplina matriculada.</p>
+        : (
+          <>
+            {/* Mobile */}
+            <div className="bol-mobile" style={{ display: 'none' }}>
+              {enrollments.map(e => {
+                const m    = calcMedia(e.n1, e.n2, e.n3);
+                const allN = [e.n1,e.n2,e.n3].every(v => v !== null);
+                return (
+                  <div key={e.enrollment_id} style={{ padding: '14px 20px', borderBottom: `1px solid ${BORD}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                      <div>
+                        <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: 500 }}>{e.name}</p>
+                        <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, fontFamily: 'monospace', marginTop: 2 }}>{e.code}</p>
                       </div>
-                    ))}
-                    <div className="bg-slate-50 rounded py-2">
-                      <p className="text-xs text-slate-400">Média</p>
-                      <p className={`text-sm font-bold mt-0.5 ${allN && media !== null ? (media >= 5 ? 'text-green-700' : 'text-red-600') : 'text-slate-300'}`}>
-                        {allN && media !== null ? media.toFixed(1) : '—'}
-                      </p>
+                      <Badge label={calcStatus(e).label} />
                     </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
+                      {(['N1','N2','N3'] as const).map((l, i) => (
+                        <div key={l} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4, padding: '8px 0', textAlign: 'center' }}>
+                          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>{l}</p>
+                          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 600, marginTop: 2 }}>{fmtGrade([e.n1,e.n2,e.n3][i])}</p>
+                        </div>
+                      ))}
+                      <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4, padding: '8px 0', textAlign: 'center' }}>
+                        <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>Média</p>
+                        <p style={{ fontSize: 13, fontWeight: 700, marginTop: 2, color: allN && m !== null ? (m >= 6 ? '#4ade80' : '#f87171') : 'rgba(255,255,255,0.2)' }}>{allN && m !== null ? m.toFixed(1) : '—'}</p>
+                      </div>
+                    </div>
+                    {e.final_exam !== null && <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, marginTop: 8 }}>Prova Sub.: <strong style={{ color: 'rgba(255,255,255,0.6)' }}>{fmtGrade(e.final_exam)}</strong></p>}
                   </div>
-                  {e.final_exam !== null && (
-                    <p className="text-xs text-slate-500 mt-2">Exame Final: <strong>{fmtGrade(e.final_exam)}</strong></p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          {/* Desktop */}
-          <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full min-w-[620px]">
-              <thead>
-                <tr className="bg-slate-50 text-left border-b border-slate-100">
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Código</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Disciplina</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-16">N1</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-16">N2</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-16">N3</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-20">Média</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-24">Ex. Final</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-28">Situação</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {enrollments.map((e) => {
-                  const media = calcMedia(e.n1, e.n2, e.n3);
-                  const allN = [e.n1, e.n2, e.n3].every((v) => v !== null);
-                  const status = calcStatus(e);
-                  return (
-                    <tr key={e.enrollment_id} className="hover:bg-slate-50/60">
-                      <td className="px-4 py-3 text-xs font-mono text-slate-400">{e.code}</td>
-                      <td className="px-4 py-3 text-sm text-slate-800">{e.name}</td>
-                      <td className="px-4 py-3 text-sm text-center text-slate-600">{fmtGrade(e.n1)}</td>
-                      <td className="px-4 py-3 text-sm text-center text-slate-600">{fmtGrade(e.n2)}</td>
-                      <td className="px-4 py-3 text-sm text-center text-slate-600">{fmtGrade(e.n3)}</td>
-                      <td className="px-4 py-3 text-sm text-center font-bold">
-                        <span className={allN && media !== null ? (media >= 5 ? 'text-green-700' : media >= 3 ? 'text-amber-600' : 'text-red-600') : 'text-slate-300'}>
-                          {allN && media !== null ? media.toFixed(1) : '—'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-slate-600">{fmtGrade(e.final_exam)}</td>
-                      <td className="px-4 py-3 text-center"><span className={status.cls}>{status.label}</span></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50 rounded-b-lg">
-            <p className="text-xs text-slate-400">Aprovado: média ≥ 5,0 &nbsp;·&nbsp; Em Exame: 3,0 a 4,9 &nbsp;·&nbsp; Reprovado por Nota: média &lt; 3,0 ou pós-exame &lt; 5,0</p>
-          </div>
-        </>
-      )}
-    </div>
+            {/* Desktop */}
+            <div className="bol-desktop" style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 580 }}>
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${BORD}` }}>
+                    {['Código','Disciplina','N1','N2','N3','Média','Prova Sub.','Situação'].map((h, i) => (
+                      <th key={h} style={{ padding: '10px 16px', textAlign: i >= 2 ? 'center' : 'left', color: 'rgba(255,255,255,0.28)', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {enrollments.map(e => {
+                    const m    = calcMedia(e.n1, e.n2, e.n3);
+                    const allN = [e.n1,e.n2,e.n3].every(v => v !== null);
+                    return (
+                      <tr key={e.enrollment_id} style={{ borderBottom: `1px solid ${BORD}` }}
+                        onMouseEnter={el => (el.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+                        onMouseLeave={el => (el.currentTarget.style.background = 'transparent')}>
+                        <td style={{ padding: '11px 16px', fontSize: 11, fontFamily: 'monospace', color: 'rgba(255,255,255,0.25)' }}>{e.code}</td>
+                        <td style={{ padding: '11px 16px', fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{e.name}</td>
+                        {[e.n1,e.n2,e.n3].map((v,i) => <td key={i} style={{ padding: '11px 16px', textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>{fmtGrade(v)}</td>)}
+                        <td style={{ padding: '11px 16px', textAlign: 'center', fontSize: 13, fontWeight: 700, color: allN && m !== null ? (m >= 6 ? '#4ade80' : m >= 4 ? '#fbbf24' : '#f87171') : 'rgba(255,255,255,0.2)' }}>{allN && m !== null ? m.toFixed(1) : '—'}</td>
+                        <td style={{ padding: '11px 16px', textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{fmtGrade(e.final_exam)}</td>
+                        <td style={{ padding: '11px 16px', textAlign: 'center' }}><Badge label={calcStatus(e).label} /></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ padding: '10px 20px', borderTop: `1px solid ${BORD}` }}>
+              <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11 }}>Aprovado: média ≥ 6,0 · Prova Sub.: 4,0 a 5,9 · Reprovado: média &lt; 4,0 ou pós-sub &lt; 6,0</p>
+            </div>
+          </>
+        )}
+      <style>{`
+        @media(max-width:640px){ .bol-mobile{display:block !important} .bol-desktop{display:none !important} }
+      `}</style>
+    </Card>
   );
 }
 
-// ── FREQUÊNCIA ────────────────────────────────────────────────────────────────
+/* ── FREQUÊNCIA ──────────────────────────────────────────────────────────── */
 
 function FrequenciaTab({ enrollments }: { enrollments: Enrollment[] }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-lg">
-      <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Controle de Frequência</h2>
-        </div>
-        <span className="text-xs text-slate-400">Mínimo obrigatório: 75%</span>
+    <Card>
+      <div style={{ padding: '16px 20px 12px', borderBottom: `1px solid ${BORD}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <SectionTitle>Controle de frequência</SectionTitle>
+        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12 }}>Mínimo: 75%</span>
       </div>
 
-      {enrollments.length === 0 ? (
-        <p className="text-slate-400 text-sm text-center py-10">Nenhuma disciplina matriculada no período.</p>
-      ) : (
-        <>
-          {/* Mobile */}
-          <div className="block sm:hidden divide-y divide-slate-100">
-            {enrollments.map((e) => {
-              const maxAbs = Math.floor(e.workload * 0.25);
-              const freqNum = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
-              const repFalta = e.total_classes > 0 && e.absences > maxAbs;
-              const atRisk = !repFalta && freqNum !== null && freqNum < 80;
-              return (
-                <div key={e.enrollment_id} className="px-4 py-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="text-sm font-medium text-slate-800">{e.name}</p>
-                      <p className="text-xs text-slate-400 font-mono mt-0.5">{e.code} · {e.workload}h</p>
-                    </div>
-                    {repFalta ? <span className="badge-reprovado">Rep. Falta</span>
-                      : atRisk   ? <span className="badge-risco">Em Risco</span>
-                      : e.total_classes === 0 ? <span className="badge-cursando">Aguardando</span>
-                      : <span className="badge-aprovado">Regular</span>}
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-center mb-3">
-                    {[['Aulas Dadas', e.total_classes || 0], ['Faltas', e.absences || 0], ['Máx. Faltas', maxAbs]].map(([l, v]) => (
-                      <div key={String(l)} className="bg-slate-50 rounded py-2">
-                        <p className="text-xs text-slate-400">{l}</p>
-                        <p className={`text-sm font-semibold mt-0.5 ${l === 'Faltas' && repFalta ? 'text-red-600' : 'text-slate-700'}`}>{v}</p>
+      {enrollments.length === 0
+        ? <p style={{ color: 'rgba(255,255,255,0.25)', textAlign: 'center', padding: '32px 0', fontSize: 13 }}>Nenhuma disciplina matriculada.</p>
+        : (
+          <>
+            {/* Mobile */}
+            <div className="freq-mobile" style={{ display: 'none' }}>
+              {enrollments.map(e => {
+                const maxAbs = Math.floor(e.workload * 0.25);
+                const freq   = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
+                const repF   = e.total_classes > 0 && e.absences > maxAbs;
+                const risk   = !repF && freq !== null && freq < 80;
+                const badge  = repF ? 'Rep. Falta (freq)' : risk ? 'Em Risco' : e.total_classes === 0 ? 'Aguardando' : 'Regular';
+                return (
+                  <div key={e.enrollment_id} style={{ padding: '14px 20px', borderBottom: `1px solid ${BORD}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <div>
+                        <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: 500 }}>{e.name}</p>
+                        <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, fontFamily: 'monospace', marginTop: 2 }}>{e.code} · {e.workload}h</p>
                       </div>
+                      <Badge label={badge} />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 10 }}>
+                      {[['Aulas',e.total_classes||0],['Faltas',e.absences||0],['Máx.',maxAbs]].map(([l,v]) => (
+                        <div key={String(l)} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4, padding: '8px 0', textAlign: 'center' }}>
+                          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>{l}</p>
+                          <p style={{ color: l==='Faltas' && repF ? '#f87171' : 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 600, marginTop: 2 }}>{v}</p>
+                        </div>
+                      ))}
+                    </div>
+                    {freq !== null && (
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>Frequência</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: freq >= 75 ? '#4ade80' : freq >= 60 ? '#fbbf24' : '#f87171' }}>{freq.toFixed(1)}%</span>
+                        </div>
+                        <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 99, height: 3 }}>
+                          <div style={{ height: 3, borderRadius: 99, width: `${Math.min(freq,100)}%`, background: freq >= 75 ? '#4ade80' : freq >= 60 ? '#fbbf24' : RED }} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop */}
+            <div className="freq-desktop" style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${BORD}` }}>
+                    {['Código','Disciplina','C.H.','Aulas','Faltas','Máx.','Frequência','Situação'].map((h, i) => (
+                      <th key={h} style={{ padding: '10px 16px', textAlign: i >= 2 ? 'center' : 'left', color: 'rgba(255,255,255,0.28)', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
-                  </div>
-                  {freqNum !== null && (
-                    <div>
-                      <div className="flex justify-between text-xs text-slate-500 mb-1">
-                        <span>Frequência acumulada</span>
-                        <span className={`font-semibold ${freqNum >= 75 ? 'text-green-700' : freqNum >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
-                          {freqNum.toFixed(1)}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-slate-200 rounded-full h-1.5">
-                        <div className={`h-1.5 rounded-full ${freqNum >= 75 ? 'bg-green-500' : freqNum >= 60 ? 'bg-amber-500' : 'bg-red-500'}`}
-                          style={{ width: `${Math.min(freqNum, 100)}%` }} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Desktop */}
-          <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full min-w-[640px]">
-              <thead>
-                <tr className="bg-slate-50 text-left border-b border-slate-100">
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Código</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Disciplina</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-16">C.H.</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-20">Aulas</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-16">Faltas</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-16">Máx.</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-32">Frequência</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center w-28">Situação</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {enrollments.map((e) => {
-                  const maxAbs = Math.floor(e.workload * 0.25);
-                  const freqNum = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
-                  const repFalta = e.total_classes > 0 && e.absences > maxAbs;
-                  const atRisk = !repFalta && freqNum !== null && freqNum < 80;
-                  return (
-                    <tr key={e.enrollment_id} className="hover:bg-slate-50/60">
-                      <td className="px-4 py-3 text-xs font-mono text-slate-400">{e.code}</td>
-                      <td className="px-4 py-3 text-sm text-slate-800">{e.name}</td>
-                      <td className="px-4 py-3 text-sm text-center text-slate-500">{e.workload}h</td>
-                      <td className="px-4 py-3 text-sm text-center text-slate-600">{e.total_classes || 0}</td>
-                      <td className="px-4 py-3 text-sm text-center font-semibold">
-                        <span className={repFalta ? 'text-red-600' : atRisk ? 'text-amber-600' : 'text-slate-600'}>
-                          {e.absences || 0}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center text-slate-400">{maxAbs}</td>
-                      <td className="px-4 py-3">
-                        {freqNum !== null ? (
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-slate-200 rounded-full h-1.5">
-                              <div className={`h-1.5 rounded-full ${freqNum >= 75 ? 'bg-green-500' : freqNum >= 60 ? 'bg-amber-500' : 'bg-red-500'}`}
-                                style={{ width: `${Math.min(freqNum, 100)}%` }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {enrollments.map(e => {
+                    const maxAbs = Math.floor(e.workload * 0.25);
+                    const freq   = e.total_classes > 0 ? ((e.total_classes - e.absences) / e.total_classes) * 100 : null;
+                    const repF   = e.total_classes > 0 && e.absences > maxAbs;
+                    const risk   = !repF && freq !== null && freq < 80;
+                    const badge  = repF ? 'Rep. Falta (freq)' : risk ? 'Em Risco' : e.total_classes === 0 ? 'Aguardando' : 'Regular';
+                    return (
+                      <tr key={e.enrollment_id} style={{ borderBottom: `1px solid ${BORD}` }}
+                        onMouseEnter={el => (el.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+                        onMouseLeave={el => (el.currentTarget.style.background = 'transparent')}>
+                        <td style={{ padding: '11px 16px', fontSize: 11, fontFamily: 'monospace', color: 'rgba(255,255,255,0.25)' }}>{e.code}</td>
+                        <td style={{ padding: '11px 16px', fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{e.name}</td>
+                        <td style={{ padding: '11px 16px', textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{e.workload}h</td>
+                        <td style={{ padding: '11px 16px', textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>{e.total_classes||0}</td>
+                        <td style={{ padding: '11px 16px', textAlign: 'center', fontSize: 13, fontWeight: 600, color: repF ? '#f87171' : risk ? '#fbbf24' : 'rgba(255,255,255,0.45)' }}>{e.absences||0}</td>
+                        <td style={{ padding: '11px 16px', textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.25)' }}>{maxAbs}</td>
+                        <td style={{ padding: '11px 16px' }}>
+                          {freq !== null ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div style={{ flex: 1, background: 'rgba(255,255,255,0.08)', borderRadius: 99, height: 3 }}>
+                                <div style={{ height: 3, borderRadius: 99, width: `${Math.min(freq,100)}%`, background: freq >= 75 ? '#4ade80' : freq >= 60 ? '#fbbf24' : RED }} />
+                              </div>
+                              <span style={{ fontSize: 12, fontWeight: 600, width: 40, textAlign: 'right', color: freq >= 75 ? '#4ade80' : freq >= 60 ? '#fbbf24' : '#f87171' }}>{freq.toFixed(1)}%</span>
                             </div>
-                            <span className={`text-xs font-semibold w-10 text-right ${freqNum >= 75 ? 'text-green-700' : freqNum >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
-                              {freqNum.toFixed(1)}%
-                            </span>
-                          </div>
-                        ) : <span className="text-slate-300 text-sm block text-center">—</span>}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {repFalta ? <span className="badge-reprovado">Rep. Falta</span>
-                          : atRisk   ? <span className="badge-risco">Em Risco</span>
-                          : e.total_classes === 0 ? <span className="badge-cursando">Aguardando</span>
-                          : <span className="badge-aprovado">Regular</span>}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50 rounded-b-lg">
-            <p className="text-xs text-slate-400">Reprovação por falta quando ausências ultrapassam 25% da carga horária total da disciplina.</p>
-          </div>
-        </>
-      )}
-    </div>
+                          ) : <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13, display: 'block', textAlign: 'center' }}>—</span>}
+                        </td>
+                        <td style={{ padding: '11px 16px', textAlign: 'center' }}><Badge label={badge} /></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ padding: '10px 20px', borderTop: `1px solid ${BORD}` }}>
+              <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11 }}>Reprovação por falta: ausências acima de 25% da carga horária.</p>
+            </div>
+          </>
+        )}
+      <style>{`
+        @media(max-width:640px){ .freq-mobile{display:block !important} .freq-desktop{display:none !important} }
+      `}</style>
+    </Card>
   );
 }
 
-// ── PERFIL ────────────────────────────────────────────────────────────────────
-
-function Avatar({ photo, name }: { photo?: string | null; name: string }) {
-  if (photo) return <img src={photo} alt={name} className="w-20 h-20 rounded-full object-cover border-2 border-slate-200 flex-shrink-0" />;
-  return (
-    <div className="w-20 h-20 rounded-full bg-[#F26522] flex items-center justify-center text-white text-3xl font-bold flex-shrink-0">
-      {name.charAt(0).toUpperCase()}
-    </div>
-  );
-}
+/* ── PERFIL ──────────────────────────────────────────────────────────────── */
 
 function compressImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       const img = new Image();
       img.onload = () => {
         const MAX = 300;
         let w = img.width, h = img.height;
         if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
-        else { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', 0.82));
+        else       { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d')!.drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL('image/jpeg', 0.82));
       };
       img.onerror = reject;
       img.src = e.target!.result as string;
@@ -504,24 +504,16 @@ function compressImage(file: File): Promise<string> {
   });
 }
 
-function PerfilTab({ profile, onPhotoUpdate }: { profile: User | null; onPhotoUpdate: (photo: string) => void }) {
-  const fileRef = useRef<HTMLInputElement>(null);
+function PerfilTab({ profile, onPhotoUpdate }: { profile: User | null; onPhotoUpdate: (p: string) => void }) {
+  const fileRef  = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
-
+  const [err, setErr]             = useState('');
   if (!profile) return null;
+
   const p = profile as User & { matricula?: string; semester?: number; cpf?: string; phone?: string };
 
-  function fmtCPF(v?: string) {
-    if (!v) return 'não informado';
-    return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-  }
-  function fmtPhone(v?: string) {
-    if (!v) return 'não informado';
-    const d = v.replace(/\D/g, '');
-    if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
-    return v;
-  }
+  function fmtCPF(v?: string)   { if (!v) return '—'; return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4'); }
+  function fmtPhone(v?: string) { if (!v) return '—'; const d = v.replace(/\D/g,''); return d.length === 11 ? `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}` : v; }
   function fmtIngresso() {
     if (!p.semester) return '—';
     const now = new Date();
@@ -529,100 +521,88 @@ function PerfilTab({ profile, onPhotoUpdate }: { profile: User | null; onPhotoUp
     const ing = cur - (p.semester - 1);
     const y = Math.floor(ing / 2);
     const s = (ing % 2) + 1;
-    return `${String(s).padStart(2, '0')}/${y}`;
+    return s === 1 ? `Fevereiro/${y}` : `Agosto/${y}`;
   }
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) { setError('Selecione uma imagem válida.'); return; }
-    if (file.size > 10 * 1024 * 1024) { setError('Imagem muito grande. Máximo 10MB.'); return; }
-    setError(''); setUploading(true);
+    if (!file.type.startsWith('image/')) { setErr('Selecione uma imagem.'); return; }
+    setErr(''); setUploading(true);
     try {
       const compressed = await compressImage(file);
       await api.put('/student/photo', { photo: compressed });
       onPhotoUpdate(compressed);
-    } catch {
-      setError('Erro ao salvar foto. Tente novamente.');
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = '';
-    }
+    } catch { setErr('Erro ao salvar foto.'); }
+    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ''; }
   }
 
   const rows = [
-    ['Curso',      'Medicina (Bacharelado)'],
-    ['Habilitação','Bacharelado'],
-    ['Turno',      'Integral'],
-    ['Ingresso',   fmtIngresso()],
+    ['Curso',          'Tecnologia em Análise e Desenvolvimento de Sistemas'],
+    ['Modalidade',     'Tecnólogo — Semestral Online'],
+    ['Turno',          'Noturno'],
+    ['Ingresso',       fmtIngresso()],
     ['Semestre atual', p.semester ? `${p.semester}º Semestre` : '—'],
-    ['Matrícula',  p.matricula ?? '—'],
-    ['CPF',        fmtCPF(p.cpf)],
-    ['Telefone',   fmtPhone(p.phone)],
-    ['Situação',   'Ativo(a)'],
-    ['Regime',     'Semestral Presencial'],
+    ['Matrícula',      p.matricula ?? '—'],
+    ['CPF',            fmtCPF(p.cpf)],
+    ['Telefone',       fmtPhone(p.phone)],
+    ['Situação',       'Ativo(a)'],
+    ['Regime',         'Semestral Online'],
   ];
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 680 }}>
+
       {/* Identificação */}
-      <div className="bg-white border border-slate-200 rounded-lg">
-        <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Identificação</h2>
-        </div>
-        <div className="px-4 py-5 flex flex-col sm:flex-row items-center sm:items-start gap-5">
-          <div className="relative flex-shrink-0">
-            <Avatar photo={profile.photo} name={profile.name} />
-            <button
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              className="absolute bottom-0 right-0 w-7 h-7 bg-[#F26522] hover:bg-[#E05A15] rounded-full flex items-center justify-center text-white shadow transition-colors disabled:opacity-50"
-            >
+      <Card style={{ padding: '20px 24px' }}>
+        <SectionTitle>Identificação</SectionTitle>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            {profile.photo
+              ? <img src={profile.photo} alt={profile.name} style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: `1px solid ${BORD}` }} />
+              : <div style={{ width: 72, height: 72, borderRadius: '50%', background: RED, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 28, fontWeight: 900 }}>{profile.name.charAt(0)}</div>
+            }
+            <button onClick={() => fileRef.current?.click()} disabled={uploading} style={{
+              position: 'absolute', bottom: 0, right: 0, width: 24, height: 24, borderRadius: '50%',
+              background: RED, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
               {uploading
-                ? <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
+                ? <div style={{ width: 10, height: 10, border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin .7s linear infinite' }} />
+                : <svg width="11" height="11" fill="none" stroke="white" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               }
             </button>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
           </div>
           <div>
-            <p className="text-xs text-slate-400 uppercase tracking-wide">Nome completo</p>
-            <h3 className="text-lg font-semibold text-slate-800 mt-0.5">{profile.name}</h3>
-            <p className="text-sm text-slate-500 mt-1">Discente · Medicina · UFSCar</p>
-            <p className="text-xs font-mono text-slate-400 mt-1">{p.matricula}</p>
-            {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+            <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 16, fontWeight: 600 }}>{profile.name}</p>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, marginTop: 3 }}>Discente · ADS · FIAP</p>
+            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, fontFamily: 'monospace', marginTop: 2 }}>{p.matricula}</p>
+            {err && <p style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>{err}</p>}
           </div>
         </div>
-      </div>
+      </Card>
 
-      {/* Dados acadêmicos */}
-      <div className="bg-white border border-slate-200 rounded-lg">
-        <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-          <div className="w-1 h-4 bg-[#F26522] rounded-full" />
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Dados Acadêmicos e Pessoais</h2>
+      {/* Dados */}
+      <Card>
+        <div style={{ padding: '16px 20px 12px', borderBottom: `1px solid ${BORD}` }}>
+          <SectionTitle>Dados acadêmicos e pessoais</SectionTitle>
         </div>
-        <table className="w-full">
-          <tbody className="divide-y divide-slate-100">
-            {rows.map(([label, value]) => (
-              <tr key={label} className="hover:bg-slate-50/50">
-                <td className="px-4 py-2.5 text-xs text-slate-400 uppercase tracking-wide w-40">{label}</td>
-                <td className="px-4 py-2.5 text-sm text-slate-800 font-medium">{value}</td>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <tbody>
+            {rows.map(([l, v]) => (
+              <tr key={l} style={{ borderBottom: `1px solid ${BORD}` }}
+                onMouseEnter={el => (el.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+                onMouseLeave={el => (el.currentTarget.style.background = 'transparent')}>
+                <td style={{ padding: '10px 20px', color: 'rgba(255,255,255,0.28)', fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', width: 160, whiteSpace: 'nowrap' }}>{l}</td>
+                <td style={{ padding: '10px 20px', color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>{v}</td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
-
-      <div className="border-l-4 border-slate-200 pl-4 py-1">
-        <p className="text-xs text-slate-500">
-          Para atualização de dados cadastrais, dirija-se à Secretaria Acadêmica ou envie solicitação para{' '}
-          <span className="font-mono text-slate-600">secretaria@ufscar.br</span>.
-        </p>
-      </div>
+        <div style={{ padding: '12px 20px', borderTop: `1px solid ${BORD}` }}>
+          <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11 }}>Para atualização de dados, entre em contato: <span style={{ fontFamily: 'monospace', color: 'rgba(255,255,255,0.3)' }}>relacionamento@fiap.com.br</span></p>
+        </div>
+      </Card>
     </div>
   );
 }

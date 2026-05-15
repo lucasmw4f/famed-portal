@@ -4,9 +4,16 @@ import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 
+const Spinner = () => (
+  <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#0A0A0A' }}>
+    <div style={{ width: 28, height: 28, border: '2px solid #F5004A', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
+
 function ProtectedAdmin({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="flex h-screen items-center justify-center text-slate-500">Carregando...</div>;
+  if (loading) return <Spinner />;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== 'admin') return <Navigate to="/aluno" replace />;
   return <>{children}</>;
@@ -14,7 +21,7 @@ function ProtectedAdmin({ children }: { children: React.ReactNode }) {
 
 function ProtectedStudent({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="flex h-screen items-center justify-center text-slate-500">Carregando...</div>;
+  if (loading) return <Spinner />;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== 'student') return <Navigate to="/admin" replace />;
   return <>{children}</>;

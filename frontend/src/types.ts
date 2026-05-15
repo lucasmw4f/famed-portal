@@ -73,12 +73,11 @@ export function calcStatus(enroll: Enrollment): {
     return { label: 'Cursando', cls: 'badge-cursando' };
   }
 
-  if (media >= 7.0) return { label: 'Aprovado', cls: 'badge-aprovado' };
-  if (media >= 5.0) return { label: 'Aprovado', cls: 'badge-aprovado' };
-  if (media >= 3.0) {
-    if (final_exam === null) return { label: 'Em Exame', cls: 'badge-exame' };
+  if (media >= 6.0) return { label: 'Aprovado', cls: 'badge-aprovado' };
+  if (media >= 4.0) {
+    if (final_exam === null) return { label: 'Prova Sub.', cls: 'badge-exame' };
     const novaMedia = (media + final_exam) / 2;
-    return novaMedia >= 5.0
+    return novaMedia >= 6.0
       ? { label: 'Aprovado', cls: 'badge-aprovado' }
       : { label: 'Rep. Nota', cls: 'badge-reprovado' };
   }

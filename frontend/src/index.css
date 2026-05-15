@@ -7,12 +7,12 @@
 }
 
 body {
-  @apply bg-slate-50 text-slate-800;
+  @apply bg-[#0D0D0D] text-white;
 }
 
 /* ── Tabs ── */
 .tab-bar {
-  @apply flex gap-0 mb-6 bg-[#071D41] rounded-xl overflow-x-auto shadow-sm;
+  @apply flex gap-0 mb-6 bg-[#1C1C1E] rounded-xl overflow-x-auto shadow-sm;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -21,7 +21,7 @@ body {
 .tab-btn {
   @apply px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 text-white/70;
 }
-.tab-btn-active   { @apply bg-[#F26522] text-white; }
+.tab-btn-active   { @apply bg-[#EC0000] text-white; }
 .tab-btn-inactive { @apply hover:bg-white/10 hover:text-white; }
 
 /* ── Layout ── */
@@ -31,10 +31,10 @@ body {
 
 /* ── Buttons ── */
 .btn-primary {
-  @apply bg-[#F26522] hover:bg-[#E05A15] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50;
+  @apply bg-[#EC0000] hover:bg-[#CC0000] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50;
 }
 .btn-danger {
-  @apply bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors;
+  @apply bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors;
 }
 .btn-secondary {
   @apply bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors;
@@ -42,7 +42,7 @@ body {
 
 /* ── Forms ── */
 .input {
-  @apply border border-slate-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-[#F26522] focus:border-transparent;
+  @apply border border-slate-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-[#EC0000] focus:border-transparent;
 }
 
 /* ── Tables ── */

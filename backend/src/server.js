@@ -33,24 +33,26 @@ app.use(cors({
 
 app.use(express.json({ limit: '2mb' })); // 2MB permite upload de foto comprimida em base64
 
-// ── Rate limiting: login ───────────────────────────────────────────────────────
-// Máximo 10 tentativas por IP a cada 15 minutos — bloqueia força bruta.
+// ── Rate limiting (desativado em desenvolvimento local) ───────────────────────
+const isDev = process.env.NODE_ENV !== 'production';
+
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Muitas tentativas. Aguarde 15 minutos e tente novamente.' },
-  skipSuccessfulRequests: true, // Só conta tentativas falhas
+  skipSuccessfulRequests: true,
+  skip: () => isDev,
 });
 
-// Rate limiting geral: 200 req/min por IP
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 200,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Muitas requisições. Tente novamente em breve.' },
+  skip: () => isDev,
 });
 
 // ── Rotas ──────────────────────────────────────────────────────────────────────
